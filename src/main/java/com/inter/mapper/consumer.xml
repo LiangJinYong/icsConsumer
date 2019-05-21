@@ -700,7 +700,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<!-- Review -->
 	<insert id="insertProdReview" parameterType="map">
-		/* selectDeliveryInfo */
+		/* insertProdReview */
 		INSERT INTO app_prod_review
 		(id, order_seq, app_user_id, review_content, review_score, rgst_dt)
 		VALUES
