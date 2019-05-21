@@ -23,20 +23,15 @@ public class DetailInfoController {
 	@ResponseBody
 	public String detailInfo(HttpServletRequest request) {
 		
-		String requestURL = request.getRequestURL().toString();
-		
 		Map<String, String[]> paramMap = request.getParameterMap();
 		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
+		
+		RequestParamUtil.putUrlHeader(request, param);
 
 		String token = request.getHeader("token");
-		param.put("token", token);
-		
-		int serverPort = request.getServerPort();
-		
-		param.put("port", String.valueOf(serverPort));
-		String[] split = requestURL.split(String.valueOf(serverPort));
-		
-		param.put("urlHeader", split[0] + serverPort);
+		if (token != null) {
+			param.put("token", token);
+		}
 		
 		String result = detailInfoService.detailInfo(param);
 		

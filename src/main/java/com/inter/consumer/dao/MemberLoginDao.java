@@ -16,4 +16,6 @@ public interface MemberLoginDao {
 
 	Map<String, Object> checkUserExistence(Map<String, String> param);
 
+	String getImgPathByGroupUUID(String groupUUID);
+
 }

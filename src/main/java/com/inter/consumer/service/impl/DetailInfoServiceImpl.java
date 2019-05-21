@@ -1,14 +1,11 @@
 package com.inter.consumer.service.impl;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,144 +29,141 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 		Map<String, Object> result = new HashMap<String, Object>();
 		Gson gson = new Gson();
 
-		int appUserCount = detailInfoDao.getUserCountByIdToken(param);
-
-		String authCd = param.get("authCd");
-
-		if (appUserCount != 0) {
-			Map<String, Object> detailInfo = detailInfoDao.getDetailInfo(param);
-
-			List<Map<String, Object>> detailInfoTitleList = detailInfoDao.getDetailInfoTitleList(param);
-
-			List<Map<String, Object>> detailInfoList = new ArrayList<Map<String, Object>>();
-
-			if (detailInfo != null) {
-
-				for (Map<String, Object> detailInfoTitle : detailInfoTitleList) {
-
-					Map<String, Object> tempMap = new HashMap<String, Object>();
-
-					if (detailInfoTitle.get("col_cl").equals("date")) {
+		String token = param.get("token");
+		
+		String auth = "AU06";
+		if (token != null) {
+			auth = detailInfoDao.getUserAuthByToken(token);
+			if (auth == null) {
+				auth = "AU06";
+			}
+		}
+		
+		param.put("auth", auth);
+		
+		Map<String, Object> currentSeqInfo = detailInfoDao.getCurrentSeqInfo(param);
+		
+		if (currentSeqInfo == null) {
+			result.put("resultCode", 405);
+			messageUtil.addResultMsg(param, result);
+			return  gson.toJson(result);
+		} else {
+			int orderSeq = (int) currentSeqInfo.get("ORDER_SEQ");
+			
+			param.put("orderSeq", String.valueOf(orderSeq));
+			
+			Map<String, Object> data = new HashMap<>();
+			
+			List<Map<String, Object>> topList = new ArrayList<>();
+			List<Map<String, Object>> defList = new ArrayList<>();
+			
+			List<Map<String, Object>> detailInfo = detailInfoDao.getDetailInfo(param);
+			
+			Map<String, Object> reviewInfo = detailInfoDao.getReviewInfo(param);
+			
+			Iterator<Map<String, Object>> iterator = detailInfo.iterator();
+			
+			String urlHeader = param.get("urlHeader");
+			
+			String blockChainYn = "N";
+			while (iterator.hasNext()) {
+				Map<String, Object> detailItem = iterator.next();
+				
+				String typeCode = (String) detailItem.get("DETAIL_TYP_CD");
+				
+				String detailVal = (String) detailItem.get("DETAIL_VAL");
+				
+				Set<String> infoKeySet = currentSeqInfo.keySet();
+				
+				if ("N99".equals(typeCode)) {
 						
-						String productExpireDateStr = (String) detailInfo.get("PROD_EXP_DT");
-						if (productExpireDateStr != null && !"".equals(productExpireDateStr) && !"9999/12/31".equals(productExpireDateStr)) {
-							
-							String expireMsg;
-							try {
-								DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-								df.setTimeZone(TimeZone.getTimeZone((String) detailInfoTitle.get("timezone")));
-								
-								Date codeExpireDate = df.parse(productExpireDateStr);
-								
-								Date today = new Date();
-								
-								if (codeExpireDate.after(today)) {
-									int diff = (int) ((codeExpireDate.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
-									expireMsg = String.valueOf(diff);
-									result.put("expireFlag", true);
-								} else {
-									expireMsg = (String) detailInfoTitle.get("invalid");
-									result.put("expireFlag", false);
-								}
-								
-								tempMap.put("title", detailInfoTitle.get("order_col_nm"));
-								tempMap.put("content", expireMsg);
-								tempMap.put("titleCode", detailInfoTitle.get("coldtlnm"));
-							} catch (ParseException e) {
-								e.printStackTrace();
-							}
-						}
-					} else if (detailInfoTitle.get("col_cl").equals("sys")) {
-						if ("AU00".equals(authCd)) {
-							tempMap.put("title", detailInfoTitle.get("order_col_nm"));
-							tempMap.put("content", detailInfo.get((String) detailInfoTitle.get("order_col")));
-							tempMap.put("titleCode", detailInfoTitle.get("order_col"));
-						} 
-					} else if (detailInfoTitle.get("col_cl").equals("code")) {
-							String productVal = (String) detailInfo.get((String) detailInfoTitle.get("order_col"));
-							if (productVal != null && !"".equals(productVal.trim())) {
-								String[] productValArr = productVal.split("\\^");
-
-								if (productValArr.length == 2) {
-
-									tempMap = new HashMap<String, Object>();
-									tempMap.put("title", productValArr[0]);
-									tempMap.put("content", productValArr[1]);
-									tempMap.put("titleCode", detailInfoTitle.get("order_col"));
-								}
-						}
+					if (!infoKeySet.contains(detailVal) || ("DISTRIBUTION_YN".equals(detailVal) && "N".equals(currentSeqInfo.get("DISTRIBUTION_YN")))) {
+						iterator.remove();
+						continue;
+					} else if ("PROD_EXP_DT".equals(detailVal)) {
+						String prodExpDt = currentSeqInfo.get("REMAIN_DT") + "|" + currentSeqInfo.get(detailVal);
+						detailItem.put("DETAIL_VAL", prodExpDt);
 					} else {
-						tempMap.put("title", detailInfoTitle.get("order_col_nm"));
-						tempMap.put("content", detailInfo.get((String) detailInfoTitle.get("order_col")));
-						tempMap.put("titleCode", detailInfoTitle.get("order_col"));
+						detailItem.put("DETAIL_VAL", currentSeqInfo.get(detailVal));
 					}
-					
-					detailInfoList.add(tempMap);
-				}
-
-				result.put("paramColor", detailInfo.get("PARAM_COLOR"));
-				
-				String textColor = (String) detailInfo.get("TEXT_COLOR");
-				
-				if ("".equals(textColor)) {
-					textColor = "0";
-				}
-				result.put("textColor", textColor);
-				
-				String foodNutritionPath = (String) detailInfo.get("FNI_FILE_UUID_URL");
-				String rawMaterialPath = (String) detailInfo.get("RMI_FILE_UUID_URL");
-				String bizLogoPath = (String) detailInfo.get("BIZ_LOGO_UUID_URL");
-				if (foodNutritionPath != null) {
-					result.put("foodNutritionPath", param.get("urlHeader") + foodNutritionPath);
-				} else {
-					result.put("foodNutritionPath", "");
 				}
 				
-				if (rawMaterialPath != null) {
-					result.put("rawMaterialPath", param.get("urlHeader") + rawMaterialPath);
-				}else {
-					result.put("rawMaterialPath", ""); 
-				}
-				
-				if (bizLogoPath != null) {
-					result.put("bizLogoPath", param.get("urlHeader") + bizLogoPath);
-				} else {
-					result.put("bizLogoPath", ""); 
-				}
-				
-				int logisticsCount = detailInfoDao.getLogisticsCount(param.get("sequence"));
-				result.put("logisticsCount", logisticsCount);
-				
-				// Block Chain
-				String blockChainYn = (String) detailInfo.get("blockChainYn");
-				result.put("blockChainYn", blockChainYn);
-				
-				if ("Y".equalsIgnoreCase(blockChainYn)) {
+				if ("M00".equals(typeCode)) {
+					result.put("colorCode", detailVal);
+				} else if ("M01".equals(typeCode)) {
+					result.put("productName", detailVal);
+				} else if ("M02".equals(typeCode)) {
+					String prodImgPath = getImgPath(urlHeader, detailVal);
+					result.put("prodImgPath", prodImgPath);
+				} else if ("M03".equals(typeCode)) {
+					result.put("reviewCount", reviewInfo.get("REVIEW_CNT"));
+				} else if ("M04".equals(typeCode)) {
+					String reviewScore = (String) reviewInfo.get("REVIEW_SCORE");
+					if (reviewScore != null) {
+						result.put("reviewScore", reviewScore);
+					}
+				} else if ("M05".equals(typeCode)) {
+					blockChainYn = detailVal;
+					result.put("blockChainYn", detailVal);
+				} else if ("M06".equals(typeCode) && "Y".equals(blockChainYn)) {
 					param.put("codeId", "CHAIN_URL");
 					param.put("codeValue", "GET_DIST_DATA");
 					
 					String blockChainURL = messageUtil.getCommonCodeValueName(param);
 					
+					result.put("blockChainURL", blockChainURL + param.get("sequence") + "/");
+				} else if ("M07".equals(typeCode) && "Y".equals(blockChainYn)) {
 					param.put("codeValue", "GET_DELIVERY_DATA");
 					String blockChainDeliveryURL = messageUtil.getCommonCodeValueName(param);
 					
-					result.put("blockChainURL", blockChainURL + param.get("sequence") + "/");
 					result.put("blockChainDeliveryURL", blockChainDeliveryURL);
 				}
-
-				result.put("detail", detailInfoList);
-
-				result.put("resultCode", 200);
-			} else {
-				result.put("resultCode", 415);
+				String groupCode = (String) detailItem.get("DETAIL_GRP_CD");
+				
+				detailItem.remove("DETAIL_GRP_CD");
+				
+				if ("TOP".equals(groupCode)) {
+					
+					if ("N03".equals(typeCode)) {
+						String imgPath = getImgPath(urlHeader, detailVal);
+						detailItem.put("DETAIL_VAL", imgPath);
+					} else if ("N06".equals(typeCode)) {
+						if (!infoKeySet.contains(detailVal)) {
+							iterator.remove();
+							continue;
+						} else {
+							detailItem.put("DETAIL_VAL", currentSeqInfo.get(detailVal));
+						}
+					}
+					
+					String iconName = (String) detailItem.get("ICON_NM");
+					detailItem.put("ICON_NM", urlHeader + iconName);
+					
+					topList.add(detailItem);
+				} else if ("DEF".equals(groupCode)) {
+					defList.add(detailItem);
+				} else if ("MAN".equals(groupCode)) {
+					data.put("MAN", detailItem);
+				}
 			}
-		} else {
-			result.put("resultCode", 403);
+			
+			data.put("TOP", topList);
+			data.put("DEF", defList);
+			
+			result.put("data", data);
 		}
+		
+		result.put("resultCode", 200);
 		
 		messageUtil.addResultMsg(param, result);
 
 		return gson.toJson(result);
 	}
 
+	private String getImgPath(String urlHeader, String groupUUID) {
+		
+		String serverPath = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+		
+		return urlHeader + serverPath;
+	}
 }

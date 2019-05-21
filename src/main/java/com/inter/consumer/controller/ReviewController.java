@@ -7,47 +7,44 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.inter.consumer.service.ModifyUserInfoService;
+import com.inter.consumer.service.ReviewService;
 import com.inter.util.RequestParamUtil;
 
-@Controller("modifyUserInfoControllerForConsumer")
+@Controller
 @RequestMapping("/consumer")
-public class ModifyUserInfoController {
+public class ReviewController {
 
 	@Autowired
-	private ModifyUserInfoService modifyUserInfoService;
+	private ReviewService reviewService;
 	
-	@RequestMapping(value = "/modifyUserInfo", method = RequestMethod.POST)
+	@RequestMapping("/registerReview")
 	@ResponseBody
-	public String modifyUserInfo(HttpServletRequest request) {
+	public String registerReview(HttpServletRequest request) {
 		
 		Map<String, String[]> paramMap = request.getParameterMap();
 		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
 		
-		RequestParamUtil.putUrlHeader(request, param);
-		
 		String token = request.getHeader("token");
 		param.put("token", token);
 		
-		String result = modifyUserInfoService.modifyUserInfo(param, request);
+		String result = reviewService.registerReview(param);
 		return result;
 	}
 	
-	@RequestMapping(value = "/modifyUserProfile", method = RequestMethod.POST)
+	@RequestMapping("/getReviewList")
 	@ResponseBody
-	public String modifyUserProfile(HttpServletRequest request) {
+	public String getReviewList(HttpServletRequest request) {
 		Map<String, String[]> paramMap = request.getParameterMap();
 		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
-		
-		RequestParamUtil.putUrlHeader(request, param);
 		
 		String token = request.getHeader("token");
 		param.put("token", token);
 		
-		String result = modifyUserInfoService.modifyUserProfile(param, request);
+		RequestParamUtil.putUrlHeader(request, param);
+		
+		String result = reviewService.getReviewList(param);
 		return result;
 	}
 }

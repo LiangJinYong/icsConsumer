@@ -17,16 +17,19 @@ public class ModifyUserInfoDaoImpl implements ModifyUserInfoDao {
 	@Qualifier("orderSqlSession")
 	private SqlSessionTemplate sqlSessionTemplate;
 
-	public void insertImg(Map<String, Object> paramObj) {
-		sqlSessionTemplate.insert(NAMESPACE + "insertImg", paramObj);
-	}
-
-	public void updateUserImgInfo(Map<String, Object> param) {
-		sqlSessionTemplate.update(NAMESPACE + "updateUserImgInfo", param);
-	}
-
+	@Override
 	public void updateUserDtlInfo(Map<String, String> param) {
 		sqlSessionTemplate.update(NAMESPACE + "updateUserDtlInfo", param);
+	}
+
+	@Override
+	public void updateUserImgId(Map<String, Object> paramObj) {
+		sqlSessionTemplate.update(NAMESPACE + "updateUserImgId", paramObj);
+	}
+
+	@Override
+	public void insertImg(Map<String, Object> paramObj) {
+		sqlSessionTemplate.insert(NAMESPACE + "insertImg", paramObj);
 	}
 
 }

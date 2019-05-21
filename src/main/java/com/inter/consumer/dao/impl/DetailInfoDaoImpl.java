@@ -14,43 +14,34 @@ import com.inter.consumer.dao.DetailInfoDao;
 public class DetailInfoDaoImpl implements DetailInfoDao {
 
 	private static final String NAMESPACE = "com.inter.consumer.";
-	
+
 	@Autowired
 	@Qualifier("orderSqlSession")
 	private SqlSessionTemplate orderSqlSession;
-	
-	public Map<String, Object> getDetailInfo(Map<String, String> param) {
-		return orderSqlSession.selectOne(NAMESPACE + "getDetailInfo", param);
-	}
 
-	public Map<String, Object> getExtendedDetailInfoBySequence(Map<String, String> param) {
-		return orderSqlSession.selectOne(NAMESPACE + "getExtendedDetailInfoBySequence", param);
-	}
-
-	public Map<String, Object> getOrderInfoBySequence(String sequence) {
-		return orderSqlSession.selectOne(NAMESPACE + "getOrderInfoBySequence", sequence);
-	}
-
-	public List<Map<String, Object>> getDetailInfoTitleList(Map<String, String> param) {
-		return orderSqlSession.selectList(NAMESPACE + "getDetailInfoTitleList", param);
-	}
-
-	public int getUserCountByIdToken(Map<String, String> param) {
-		return orderSqlSession.selectOne(NAMESPACE + "getUserCountByIdToken", param);
-	}
-
-	public int getLogisticsCount(String sequence) {
-		return orderSqlSession.selectOne(NAMESPACE + "getLogisticsCount", sequence);
+	@Override
+	public String getUserAuthByToken(String token) {
+		return orderSqlSession.selectOne(NAMESPACE + "getUserAuthByToken", token);
 	}
 
 	@Override
-	public Map<String, Object> getDetailInfoCN(Map<String, String> param) {
-		return orderSqlSession.selectOne(NAMESPACE + "getDetailInfoCN", param);
+	public Map<String, Object> getCurrentSeqInfo(Map<String, String> param) {
+		return orderSqlSession.selectOne(NAMESPACE + "getCurrentSeqInfo", param);
 	}
 
 	@Override
-	public String getHasExpired(String sequence) {
-		return orderSqlSession.selectOne(NAMESPACE + "getHasExpired", sequence);
+	public List<Map<String, Object>> getDetailInfo(Map<String, String> param) {
+		return orderSqlSession.selectList(NAMESPACE + "getDetailInfo", param);
+	}
+
+	@Override
+	public Map<String, Object> getReviewInfo(Map<String, String> param) {
+		return orderSqlSession.selectOne(NAMESPACE + "getReviewInfo", param);
+	}
+
+	@Override
+	public String getImgPathByGroupUUID(String groupUUID) {
+		return orderSqlSession.selectOne(NAMESPACE + "getImgPathByGroupUUID", groupUUID);
 	}
 
 }

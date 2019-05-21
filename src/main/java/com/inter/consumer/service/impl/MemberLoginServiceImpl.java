@@ -1,6 +1,5 @@
 package com.inter.consumer.service.impl;
 
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,17 +23,12 @@ public class MemberLoginServiceImpl implements MemberLoginService {
 
 	@Autowired
 	private ResultMessageUtil messageUtil;
-
+	
 	public String memberLogin(Map<String, String> param) {
 		Map<String, Object> result = new HashMap<String, Object>();
 		Gson gson = new Gson();
 		
 		String loginTypeCd = param.get("loginTypeCd");
-		
-		if (loginTypeCd == null) {
-			loginTypeCd = "E";
-			param.put("loginTypeCd", loginTypeCd);
-		}
 		
 		if (!"E".equals(loginTypeCd)) {
 			Map<String, Object> user = memberLoginDao.checkUserExistence(param);
@@ -67,10 +61,16 @@ public class MemberLoginServiceImpl implements MemberLoginService {
 		memberLoginDao.insertTokenInfo(param);
 
 		Map<String, Object> userInfo = memberLoginDao.getUserInfoById(param);
-
-		byte[] img = (byte[]) userInfo.get("img");
-		userInfo.put("img", Base64.getEncoder().encodeToString(img));
-
+		
+		String groupUUID = (String) userInfo.get("groupUUID");
+		
+		if (groupUUID != null) {
+			String urlHeader = param.get("urlHeader");
+			String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID);
+			
+			userInfo.put("img", urlHeader + serverPath);
+		}
+		
 		result.putAll(userInfo);
 
 		result.put("resultCode", 200);

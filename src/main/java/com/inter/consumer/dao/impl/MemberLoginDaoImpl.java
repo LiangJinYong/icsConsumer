@@ -43,4 +43,9 @@ public class MemberLoginDaoImpl implements MemberLoginDao {
 		return sqlSessionTemplate.selectOne(NAMESPACE + "checkUserExistence", param);
 	}
 
+	@Override
+	public String getImgPathByGroupUUID(String groupUUID) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getImgPathByGroupUUID", groupUUID);
+	}
+
 }

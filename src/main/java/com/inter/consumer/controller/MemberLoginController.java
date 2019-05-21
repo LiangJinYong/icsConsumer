@@ -26,6 +26,8 @@ public class MemberLoginController {
 		Map<String, String[]> paramMap = request.getParameterMap();
 		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
 		
+		RequestParamUtil.putUrlHeader(request, param);
+		
 		String result = memberLoginService.memberLogin(param);
 		return result;
 	}

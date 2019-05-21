@@ -49,97 +49,63 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	</select>
 
 	<!-- Detail Info -->
-	<select id="getOrderInfoBySequence" parameterType="string" resultType="hashmap">
-		/* 	getOrderInfoBySequence */
-		SELECT ORDER_SEQ orderNumber FROM app_seq WHERE SEQUENCE = #{sequence}
+	<select id="getUserAuthByToken" parameterType="string" resultType="string">
+		/* getUserAuthByToken */
+		SELECT u.auth_cd
+		FROM app_user u
+		INNER JOIN app_user_token t
+		ON u.app_user_id = t.app_user_id
+		WHERE t.app_user_token = #{token}
 	</select>
 	
-	<select id="getDetailInfo" parameterType="string" resultType="hashmap">
+	<select id="getCurrentSeqInfo" parameterType="map" resultType="hashmap">
+		/* getCurrentSeqInfo */
+		SET @obj_key = 'ICS2018KORVERSEQ';
+		SET @crypt_key = null;
+		
+		SELECT AES_DECRYPT(unhex(comm_cd_val_nm), @obj_key)
+		INTO @crypt_key
+		FROM licom_comm_cd_dtl
+		WHERE comm_cd_id = 'CRYPT_KEY';
+		
+		SELECT seq.ORDER_SEQ, DATE_FORMAT(seq.PROD_MAKE_DT, '%Y/%m/%d') PROD_MAKE_DT, DATE_FORMAT(seq.PROD_OUT_DT, '%Y/%m/%d') PROD_OUT_DT, DATE_FORMAT(seq.PROD_EXP_DT, '%Y/%m/%d') PROD_EXP_DT
+		, edi.DETECT_COUNT, DATE_FORMAT(edi.LAST_DETECT_TIME, '%Y-%m-%d %H:%i:%s') LAST_DETECT_TIME, CAST(AES_DECRYPT(unhex(edi.LAST_LOCATION), @crypt_key) AS CHAR) LAST_LOCATION
+		, CASE WHEN (SELECT COUNT(*) FROM app_physical_distribution WHERE sequence = #{sequence}) > 0 THEN 'Y' ELSE 'N' END DISTRIBUTION_YN
+		, DATEDIFF(seq.prod_exp_dt, CURDATE()) + 1 REMAIN_DT
+		FROM app_seq seq
+		LEFT JOIN app_extended_detail_info edi
+		ON seq.sequence = edi.sequence
+		WHERE seq.sequence = #{sequence}
+	</select>
+	
+	<select id="getDetailInfo" parameterType="map" resultType="hashmap">
 		/* getDetailInfo */
-		SELECT lbi.BIZ_NAME, PROD_CL, PROD_NM, PROD_MDL_NM, PROD_ADDR, DATE_FORMAT(seq.PROD_MAKE_DT, '%Y/%m/%d') PROD_MAKE_DT, PROD_URL, PROD_ORG, PROD_WEIGHT, DATE_FORMAT(seq.PROD_OUT_DT, '%Y/%m/%d') PROD_OUT_DT, DATE_FORMAT(IF(seq.PROD_EXP_DT = '99991231', '', seq.PROD_EXP_DT), '%Y/%m/%d') PROD_EXP_DT, CS_CNSL_TEL_NO, PARAM_COLOR, TEXT_COLOR, DETECT_COUNT, LAST_LOCATION, DATE_FORMAT(LAST_DETECT_TIME, '%Y/%m/%d %H:%i:%s') LAST_DETECT_TIME, PROD_VAL1, PROD_VAL2, PROD_VAL3, PROD_VAL4, PROD_VAL5
-		 , (select concat('/', comm_cd_val_desc, substring_index(substring_index(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
-	        from   lian_fileattach fa
-	        where  fa.groupuuid = loi.fni_file_uuid
-	       ) as FNI_FILE_UUID_URL
-	     , (select concat('/', comm_cd_val_desc, substring_index(substring_index(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
-	        from   lian_fileattach fa
-	        where  fa.groupuuid = loi.rmi_file_uuid
-	       ) as RMI_FILE_UUID_URL
-		 , (select concat('/', comm_cd_val_desc, substring_index(substring_index(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
-	        from   lian_fileattach fa
-	        where  fa.groupuuid = loi.biz_logo_uuid
-	       ) as BIZ_LOGO_UUID_URL
-		 , seq.SEQUENCE, seq.ORDER_SEQ, loi.BLK_YN blockChainYn
-		FROM lian_order_info loi
-		INNER JOIN lian_biz_info lbi on loi.BIZ_ID = lbi.BIZ_ID 
-	    INNER JOIN app_seq seq ON loi.ORDER_SEQ = seq.ORDER_SEQ
-	    LEFT JOIN app_extended_detail_info edi ON edi.SEQUENCE = seq.SEQUENCE
-	    , (SELECT comm_cd_val_nm
-		         , comm_cd_val_desc
-			FROM   licom_comm_cd_dtl
-			WHERE  comm_cd_id       = 'FTP_SERVER_DIR'
-			AND    comm_cd_val_desc = 'detail'
-		  ) AS comm 
-		WHERE seq.SEQUENCE = #{sequence}
+		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM 
+		FROM app_detail_info adi
+		WHERE order_seq = #{orderSeq}
+		AND country_cd = #{countryCode}
+		AND auth_cd >= #{auth}
+		AND dsp_yn = 'Y'
+		ORDER BY sort_no ASC
 	</select>
 	
-	<select id="getDetailInfoCN" parameterType="string" resultType="hashmap">
-		/* getDetailInfoCN */
-		SELECT lbi.BIZ_NAME, PROD_CL, PROD_NM, PROD_MDL_NM, PROD_ADDR, DATE_FORMAT(seq.PROD_MAKE_DT, '%Y/%m/%d') PROD_MAKE_DT, PROD_URL, PROD_ORG, PROD_WEIGHT, DATE_FORMAT(seq.PROD_OUT_DT, '%Y/%m/%d') PROD_OUT_DT, DATE_FORMAT(IF(seq.PROD_EXP_DT = '99991231', '', seq.PROD_EXP_DT), '%Y/%m/%d') PROD_EXP_DT, CS_CNSL_TEL_NO, PARAM_COLOR, TEXT_COLOR, DETECT_COUNT, LAST_LOCATION, DATE_FORMAT(LAST_DETECT_TIME, '%Y/%m/%d %H:%i:%s') LAST_DETECT_TIME, PROD_VAL1, PROD_VAL2, PROD_VAL3, PROD_VAL4, PROD_VAL5
-		 , (select concat('/', comm_cd_val_desc, substring_index(substring_index(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
-	        from   lian_fileattach fa
-	        where  fa.groupuuid = loi.fni_file_uuid
-	       ) as FNI_FILE_UUID_URL
-	     , (select concat('/', comm_cd_val_desc, substring_index(substring_index(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
-	        from   lian_fileattach fa
-	        where  fa.groupuuid = loi.rmi_file_uuid
-	       ) as RMI_FILE_UUID_URL
-		 , (select concat('/', comm_cd_val_desc, substring_index(substring_index(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
-	        from   lian_fileattach fa
-	        where  fa.groupuuid = loi.biz_logo_uuid
-	       ) as BIZ_LOGO_UUID_URL
-		 , seq.SEQUENCE, seq.ORDER_SEQ
-		FROM lian_order_info_cn loi
-		INNER JOIN lian_biz_info_cn lbi on loi.BIZ_ID = lbi.BIZ_ID 
-	    INNER JOIN app_seq seq ON loi.ORDER_SEQ = seq.ORDER_SEQ
-	    LEFT JOIN app_extended_detail_info edi ON edi.SEQUENCE = seq.SEQUENCE
-	    , (SELECT comm_cd_val_nm
-		         , comm_cd_val_desc
-			FROM   licom_comm_cd_dtl
-			WHERE  comm_cd_id       = 'FTP_SERVER_DIR'
-			AND    comm_cd_val_desc = 'detail'
-		  ) AS comm 
-		WHERE seq.SEQUENCE = #{sequence}
+	<select id="getReviewInfo" parameterType="map" resultType="hashmap">
+		/* getReviewInfo */
+		SELECT COUNT(*) REVIEW_CNT, FORMAT(AVG(review_score), 1) REVIEW_SCORE
+		FROM app_prod_review
+		WHERE order_seq = #{orderSeq}
 	</select>
 	
-	<select id="getDetailInfoTitleList" parameterType="map" resultType="hashmap">
-		/* getDetailInfoTitleList */
-		SELECT order_col, order_col_nm, col_cl, col_dtl_nm,
-		SUBSTRING_INDEX(SUBSTRING_INDEX(col_dtl_nm, '^', 4), '^', -1) AS invalid, 
-		SUBSTRING_INDEX(SUBSTRING_INDEX(col_dtl_nm, '^', 3), '^', -1) AS valid,   
-		SUBSTRING_INDEX(SUBSTRING_INDEX(col_dtl_nm, '^', 2), '^', -1) AS timezone, 
-		SUBSTRING_INDEX(SUBSTRING_INDEX(col_dtl_nm, '^', 1), '^', -1) AS coldtlnm
-		FROM licom_order_info_mapping 
-		WHERE country_cd = #{countryCode} ORDER BY sort_no
-	</select>
-
-	<select id="getExtendedDetailInfoBySequence" parameterType="string" resultType="hashmap">
-		/* getExtendedDetailInfoBySequence */
-		SELECT sequence, detect_count detectCount, last_location lastAddress, DATE_FORMAT(last_detect_time, '%Y-%m-%d %H:%i:%s') AS lastDetectTime FROM app_extended_detail_info WHERE sequence = #{sequence}
-	</select>
-	
-	<select id="getLogisticsCount" parameterType="string" resultType="int">
-		/* getLogisticsCount */
-		SELECT COUNT(*) FROM app_physical_distribution WHERE sequence = #{sequence}
-	</select>
-	
-	<select id="getHasExpired" parameterType="string" resultType="string">
-		/* getHasExpired */
-		SELECT CASE WHEN type = 'SL' THEN 'Y' ELSE 'N' END 
-		FROM app_physical_distribution 
-		WHERE sequence = #{sequence} 
-		ORDER BY time DESC 
-		LIMIT 1
+	<select id="getImgPathByGroupUUID" parameterType="string" resultType="string">
+		/* getImgPathByGroupUUID */
+		SELECT 
+			(SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
+	        FROM   lian_fileattach fa	
+	        WHERE  fa.groupuuid = #{groupUUID}) prodImgPath
+        FROM (SELECT comm_cd_val_nm, comm_cd_val_desc
+				FROM   licom_comm_cd_dtl
+				WHERE  comm_cd_id       = 'FTP_SERVER_DIR'
+				AND    comm_cd_val_desc = 'detail') comm
 	</select>
 
 	<!-- Physical Distribution List -->
@@ -346,7 +312,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<!-- Get Result Message -->
 	<select id="getResultMessage" parameterType="map" resultType="string">
 		/* getResultMessage */
-		SELECT msg_ctt FROM licom_msg WHERE msg_id = #{resultCode} AND country_cd = IFNULL(#{countryCode}, 'KR')
+		SELECT msg_ctt FROM licom_msg WHERE msg_id = #{resultCode} AND country_cd = IFNULL(#{countryCode}, 'US')
 	</select>
 	
 	<select id="getCommonCodeValue" parameterType="map" resultType="string">
@@ -354,7 +320,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		 SELECT COMM_CD_VAL_NM
 		 FROM licom_comm_cd_dtl 
 		 WHERE COMM_CD_VAL = #{codeValue}
-		 AND COUNTRY_CD = IFNULL(#{countryCode}, 'KR')
+		 AND COUNTRY_CD = IFNULL(#{countryCode}, 'US')
 		 AND EFF_END_DT = '99991231'
 	</select>
 
@@ -364,7 +330,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		 FROM licom_comm_cd_dtl 
 		 WHERE COMM_CD_ID = #{codeId}
 		 AND COMM_CD_VAL = #{codeValue}
-		 AND COUNTRY_CD = IFNULL(#{countryCode}, 'KR')
+		 AND COUNTRY_CD = IFNULL(#{countryCode}, 'US')
 		 AND EFF_END_DT = '99991231'
 	</select>
 	
@@ -487,7 +453,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		     , b.personal_info_yn personalInfoYn
 		     , b.location_yn locationYn
 		     , b.marketing_yn marketingYn
-		     , c.img img
+		     , a.groupuuid groupUUID
+		     , a.nick_nm nickName
 		     , IFNULL((SELECT 'N'
                  FROM   app_terms d
                  WHERE  d.APP_CL_CD = '01'
@@ -506,10 +473,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	           ), 'Y') personalInfoChgYn
 		FROM   app_user                a
 		     , app_user_agree_info_hst b
-		     , licom_img               c
 		WHERE  a.app_user_id = #{appUserId}
 		AND    b.agree_id    = a.agree_id
-		AND    c.img_id      = a.img_id
 	</select>
 	
 	<delete id="deleteTokenByUserId" parameterType="int">
@@ -518,28 +483,39 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	</delete>
 	
 	<!-- Modify User Info, Report Failure, Register Member  -->
-	<insert id="insertImg" parameterType="map">
-		/* insertImg */
-		INSERT INTO licom_img (img_id, audit_id, audit_dtm, img) 
-		VALUES(#{imgId}, #{appUserId}, NOW(), #{img, jdbcType=BLOB})
-	</insert>
-	
-	<update id="updateUserImgInfo" parameterType="map">
-		/* updateUserImgInfo */
-		UPDATE app_user
-		SET    img_id = #{imgId}
-			, audit_dtm = NOW()
-		WHERE  app_user_id = #{appUserId}
-	</update>
-	
 	<update id="updateUserDtlInfo" parameterType="map">
 		/* updateUserInfo */
 		UPDATE app_user
 		SET    gender   = IF(LENGTH(#{gender})  > 0, #{gender} , gender)
 		     , birth_dt = IF(LENGTH(#{birthDt}) > 0, #{birthDt}, birth_dt)
+		     , nick_nm = IF(LENGTH(#{nickName}) > 0, #{nickName}, nick_nm)
 		     , audit_dtm = NOW()
 		WHERE  app_user_id = #{appUserId}
 	</update>
+	
+	<select id="getGroupUUID" resultType="string">
+		/* getGroupUUID */
+		SELECT CONCAT(CURDATE()+'','_f', NEXTVAL('fileGroup'))  AS groupUUID
+	</select>
+	
+	<update id="updateUserImgId" parameterType="map">
+		/* updateUserImgId */
+		UPDATE app_user
+		SET groupuuid = #{groupUUID}
+			, audit_dtm = NOW()
+		WHERE app_user_id = #{appUserId}
+	</update>
+	
+	<insert id="insertImg" parameterType="map">
+		/* insertImg */
+		INSERT INTO lian_fileattach (GROUPUUID, FILEUUID, AUDIT_ID, AUDIT_DTM, SERVER_FILENAME, SERVER_FULLNAME, FILESIZE, FILENAME, FULL_FILENAME, STATUS, FILENAME_MAP)
+		VALUES
+		<foreach collection="imgInfoList" item="imgInfo" separator=",">
+			(
+				#{imgInfo.groupUUID}, #{imgInfo.fileUUID}, 'APP USER', NOW(), #{imgInfo.fileName}, #{imgInfo.serverFullName}, #{imgInfo.fileSize}, #{imgInfo.fileName}, #{imgInfo.fileName}, 0, #{imgInfo.fileNameMap}
+			)
+		</foreach>
+	</insert>
 	
 	<!-- Member Logout, Withdraw Member -->
 	<delete id="deleteUserToken" parameterType="map">
@@ -720,5 +696,168 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		       AND aeu.enterprise_key = ae.enterprise_key 
 		       AND adi.dv_id = #{deliveryId} 
 		ORDER  BY location_time DESC
+	</select>
+	
+	<!-- Review -->
+	<insert id="insertProdReview" parameterType="map">
+		/* selectDeliveryInfo */
+		INSERT INTO app_prod_review
+		(id, order_seq, app_user_id, review_content, review_score, rgst_dt)
+		VALUES
+		(null, #{orderSeq}, #{appUserId}, TRIM(#{content}), #{score}, DATE_FORMAT(NOW(), '%Y%m%d'))
+	</insert>
+	
+	<select id="getBizNameByOrderSeq" parameterType="map" resultType="string">
+		/* getBizNameByOrderSeq */
+		SELECT value 
+		FROM lian_intl_biz_info libi 
+		INNER JOIN lian_order_info loi ON libi.biz_id = loi.BIZ_ID 
+		WHERE libi.country_cd = #{countryCode}
+		AND title = 'BIZ_NAME' 
+		AND loi.order_seq = #{orderSeq}
+	</select>
+	
+	<select id="getProdNameByOrderSeq" parameterType="map" resultType="string">
+		/* getProdNameByOrderSeq */
+		SELECT detail_val prodName 
+		FROM app_detail_info 
+		WHERE order_seq = #{orderSeq} 
+		AND country_cd = #{countryCode}
+		AND detail_grp_cd = 'COM' 
+		AND detail_typ_cd = 'M01'
+	</select>
+	
+	<select id="getReviewList" parameterType="map" resultType="hashmap">
+		/* getReviewList */
+		SELECT au.groupuuid profileURL, apr.review_score score, IFNULL(au.nick_nm, CONCAT(LEFT(au.login_id, 4), '*****')) nickName, DATE_FORMAT(apr.rgst_dt, '%y.%m.%d') date, apr.review_content content, apr.audit_dtm time
+		FROM app_prod_review apr 
+		INNER JOIN app_user au
+		ON apr.app_user_id = au.app_user_id
+		WHERE order_seq = #{orderSeq}
+		<if test="time != ''">
+			AND apr.audit_dtm &lt; #{time}
+		</if>
+		ORDER BY apr.audit_dtm DESC
+		LIMIT 20
+	</select>
+	
+	<!-- Main Page Info -->
+	<select id="getLatestNotice" parameterType="map" resultType="hashmap">
+		/* getLatestNotice */
+		SELECT ntc_title title, dtl.comm_cd_val_nm category, DATE_FORMAT(rgst_dt, '%Y-%m-%d') date 
+		FROM app_ntc ntc
+		INNER JOIN licom_comm_cd_dtl dtl on ntc.ntc_typ_cd = dtl.comm_cd_val
+		WHERE ntc.country_cd = #{countryCode}
+		AND dtl.country_cd = #{countryCode}
+		AND dtl.comm_cd_id = 'NTC_TYPE'
+		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
+		ORDER BY ntc.audit_dtm DESC
+		LIMIT 1
+	</select>
+	
+	<select id="getRandomCorpImgList" parameterType="map" resultType="hashmap">
+		/* getRandomCorpImgList */
+		SELECT (SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
+				FROM lian_fileattach fa
+		        WHERE fa.groupuuid = libi.value) AS bizLogoPath 
+		FROM lian_intl_biz_info libi,
+			(SELECT comm_cd_val_nm, comm_cd_val_desc
+		      FROM licom_comm_cd_dtl
+		      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
+            	AND comm_cd_val_desc = 'detail') AS comm
+		WHERE country_cd = #{countryCode}
+		AND title = 'LOGO_UUID'
+		ORDER BY RAND()
+		LIMIT 20
+	</select>
+	
+	<select id="getReviewTotalPageNo" parameterType="map" resultType="int">
+		/* getReviewTotalPageNo */
+		SELECT (COUNT(*) DIV 20) + 1 reviewTotalPageNo
+		<include refid="reviewTable" />
+	</select>
+	
+	<select id="getProdImgListByReview" parameterType="map" resultType="hashmap">
+		/* getProdImgListByReview */
+		SELECT (SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) 
+		        FROM lian_fileattach fa
+		        WHERE fa.groupuuid = adi.detail_val)
+		          AS prodImgURL, orderSeq.order_seq
+		<include refid="reviewTable" />
+		ORDER BY orderSeq.cnt DESC
+		<choose>
+			<when test="currentPageNo == null">
+				LIMIT 20
+			</when>
+			<otherwise>
+				LIMIT #{offset}, 20
+			</otherwise>
+		</choose>
+	</select>
+	
+	<sql id="reviewTable">
+		FROM (SELECT order_seq, COUNT(*) cnt FROM app_prod_review GROUP BY order_seq) orderSeq
+		INNER JOIN app_detail_info adi
+		ON adi.order_seq = orderSeq.order_seq
+		, (SELECT comm_cd_val_nm, comm_cd_val_desc
+		      FROM licom_comm_cd_dtl
+		      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
+	            AND comm_cd_val_desc = 'detail') AS comm
+		WHERE adi.country_cd = #{countryCode}
+		AND detail_grp_cd = 'COM'
+		AND detail_typ_cd = 'M02'
+	</sql>
+	
+	<select id="getDetectCount" parameterType="map" resultType="int">
+		/* getDetectCount */
+		SELECT COUNT(*) cnt
+		<include refid="detectTable" />
+	</select>
+	
+	<select id="getProdImgListByDetectRecord" parameterType="map" resultType="hashmap">
+		/* getProdImgListByDetectRecord */
+		SELECT (SELECT CONCAT('/' ,comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) FROM lian_fileattach fa WHERE fa.groupuuid = adi.detail_val) AS prodImgURL
+			, log.sequence
+			, DATE_FORMAT(log.at_date, '%Y-%m-%d %H:%i:%s') time
+		<include refid="detectTable" />
+		<if test="time != null and time != ''">
+			AND log.AT_DATE &lt; #{time}
+		</if>
+		ORDER BY log.at_date DESC
+		LIMIT 20
+	</select>
+	
+	<sql id="detectTable">
+		FROM app_log_suc log INNER JOIN app_seq seq
+		ON log.sequence = seq.sequence
+		INNER JOIN app_detail_info adi
+		ON adi.order_seq = seq.order_seq,
+		(SELECT comm_cd_val_nm, comm_cd_val_desc
+				      FROM licom_comm_cd_dtl
+				      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
+				            AND comm_cd_val_desc = 'detail') AS comm
+		WHERE adi.country_cd = #{countryCode}
+		AND log.COUNTRY_CD = #{countryCode}
+		AND log.APP_USER_ID = #{appUserId}
+		AND adi.detail_grp_cd = 'COM'
+		AND adi.detail_typ_cd = 'M02'
+		AND adi.dsp_yn = 'Y'
+		AND log.RGST_YMD BETWEEN DATE_FORMAT(DATE_ADD(#{currentDate}, INTERVAL -1 MONTH), '%Y%m%d') and #{currentDate}
+	</sql>
+	
+	<select id="getNoticeList" parameterType="map" resultType="hashmap">
+		/* getNoticeList */
+		SELECT ntc_title title, dtl.comm_cd_val_nm category, DATE_FORMAT(rgst_dt, '%Y-%m-%d') date, ntc_content content, uuid groupUUID
+		FROM app_ntc ntc
+		INNER JOIN licom_comm_cd_dtl dtl on ntc.ntc_typ_cd = dtl.comm_cd_val
+		WHERE ntc.country_cd = #{countryCode}
+		AND dtl.country_cd = #{countryCode}
+		AND dtl.comm_cd_id = 'NTC_TYPE'
+		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
+		<if test="time != null">
+			ntc.audit_dtm &lt; #{time}
+		</if>
+		ORDER BY ntc.audit_dtm DESC
+		LIMIT 20
 	</select>
 </mapper>
