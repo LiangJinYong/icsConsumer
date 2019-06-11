@@ -18,9 +18,4 @@ public class ResultMessageUtil {
 		String resultMsg = messageDao.getResultMessage(param);
 		result.put("resultMsg", resultMsg);
 	}
-	
-	public String getCommonCodeValueName(Map<String, String> param) {
-	
-		return messageDao.getCommonCodeValueName(param);
-	}
 }

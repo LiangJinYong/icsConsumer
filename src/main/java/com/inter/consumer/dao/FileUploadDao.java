@@ -1,6 +1,6 @@
 package com.inter.consumer.dao;
 
-public interface FileIdDao {
+public interface FileUploadDao {
 
 	String getGroupUUID();
 

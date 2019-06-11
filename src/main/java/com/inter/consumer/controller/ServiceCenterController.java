@@ -9,39 +9,41 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.inter.consumer.service.ReviewService;
+import com.inter.consumer.service.ServiceCenterService;
 import com.inter.util.RequestParamUtil;
 
 @Controller
 @RequestMapping("/consumer")
-public class ReviewController {
+public class ServiceCenterController {
 
 	@Autowired
-	private ReviewService reviewService;
+	private ServiceCenterService serviceCenterService;
 	
-	@RequestMapping("/registerReview")
+	@RequestMapping("/reportAndQuestion")
 	@ResponseBody
-	public String registerReview(HttpServletRequest request) {
+	public String reportAndQuestion(HttpServletRequest request) {
+		Map<String, String[]> paramMap = request.getParameterMap();
+		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
 		
+		RequestParamUtil.putUrlHeader(request, param);
+		
+		String token = request.getHeader("token");
+		param.put("token", token);
+		
+		String result = serviceCenterService.reportAndQuestion(param, request);
+		return result;
+	}
+	
+	@RequestMapping("/getMyQuestionList")
+	@ResponseBody
+	public String getMyQuestionList(HttpServletRequest request) {
 		Map<String, String[]> paramMap = request.getParameterMap();
 		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
 		
 		String token = request.getHeader("token");
 		param.put("token", token);
 		
-		String result = reviewService.registerReview(param);
-		return result;
-	}
-	
-	@RequestMapping("/getReviewList")
-	@ResponseBody
-	public String getReviewList(HttpServletRequest request) {
-		Map<String, String[]> paramMap = request.getParameterMap();
-		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
-		
-		RequestParamUtil.putUrlHeader(request, param);
-		
-		String result = reviewService.getReviewList(param);
+		String result = serviceCenterService.getMyQuestionList(param);
 		return result;
 	}
 }

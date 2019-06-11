@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.gson.Gson;
-import com.inter.consumer.dao.ReportFailureDao;
 import com.inter.consumer.dao.VerificationHistoryDao;
 import com.inter.consumer.service.VerificationHistoryService;
 
@@ -22,8 +21,8 @@ public class VerificationHistoryServiceImpl implements VerificationHistoryServic
 	@Autowired
 	private VerificationHistoryDao verificationHistoryDao;
 	
-	@Autowired
-	private ReportFailureDao reportFailureDao;
+//	@Autowired
+//	private ReportFailureDao reportFailureDao;
 	
 	@Transactional
 	public String verificationHistory(Map<String, String> param) {
@@ -151,7 +150,7 @@ public class VerificationHistoryServiceImpl implements VerificationHistoryServic
 						reportMap.put("rgstTm", time);
 						reportMap.put("printKind", orderInfo.get("prodTypeCd"));
 						
-						reportFailureDao.insertFailureReportInfo(reportMap);
+//						reportFailureDao.insertFailureReportInfo(reportMap);
 					} else {
 						param.put("ruleCheckCode", ruleCheckCode);
 						String ruleCheckMsg = verificationHistoryDao.getRuleCheckMsg(param);

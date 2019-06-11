@@ -32,7 +32,7 @@ public class ModifyUserInfoController {
 		String token = request.getHeader("token");
 		param.put("token", token);
 		
-		String result = modifyUserInfoService.modifyUserInfo(param, request);
+		String result = modifyUserInfoService.modifyUserInfo(param);
 		return result;
 	}
 	

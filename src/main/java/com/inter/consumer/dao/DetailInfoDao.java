@@ -13,6 +13,6 @@ public interface DetailInfoDao {
 
 	Map<String, Object> getReviewInfo(Map<String, String> param);
 
-	String getImgPathByGroupUUID(String groupUUID);
+	List<String> getImgPathByGroupUUID(String groupUUID);
 
 }

@@ -16,18 +16,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import com.inter.consumer.dao.FileIdDao;
+import com.inter.consumer.dao.FileUploadDao;
 
 @Component
 public class FileUtil {
 
-	private static final String dirPath = "c:/dev/updateImg";
-//	private static final String dirPath = "/var/www/html/Images/detail/profile";
+	@Autowired
+	private FileUploadDao fileUploadDao;
 	
 	@Autowired
-	private FileIdDao fileIdDao;
+	private CommonCodeUtil commonCodeUtil;
 
-	public List<Map<String, Object>> parseInsertImgInfo(HttpServletRequest request) throws Exception {
+	public List<Map<String, Object>> parseInsertImgInfo(HttpServletRequest request, String uploadImgType) throws Exception {
 
 		MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
 
@@ -35,18 +35,24 @@ public class FileUtil {
 
 		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 		Map<String, Object> fileItemMap = null;
-
+		
+		Map<String, String> dirPathMap = new HashMap<>();
+		dirPathMap.put("codeId", "APP_UPLOAD");
+		dirPathMap.put("codeValue", uploadImgType);
+		dirPathMap.put("countryCode", "KR");
+		
+		String dirPath = commonCodeUtil.getCommonCodeValueName(dirPathMap);
+				
+		String groupUUID = null;
 		int fileUUID = 0;
 		while (fileNames.hasNext()) {
 			
 			MultipartFile multipartFile = multipartRequest.getFile(fileNames.next());
-
-			String groupUUID = null;
 			
 			if (!multipartFile.isEmpty()) {
 				
 				if (fileUUID == 0) {
-					groupUUID = fileIdDao.getGroupUUID();
+					groupUUID = fileUploadDao.getGroupUUID();
 				}
 				
 				String fileNameMap = groupUUID + "_" + fileUUID;

@@ -1,5 +1,6 @@
 package com.inter.consumer.dao;
 
+import java.util.List;
 import java.util.Map;
 
 public interface MemberLoginDao {
@@ -16,6 +17,6 @@ public interface MemberLoginDao {
 
 	Map<String, Object> checkUserExistence(Map<String, String> param);
 
-	String getImgPathByGroupUUID(String groupUUID);
+	List<String> getImgPathByGroupUUID(String groupUUID);
 
 }

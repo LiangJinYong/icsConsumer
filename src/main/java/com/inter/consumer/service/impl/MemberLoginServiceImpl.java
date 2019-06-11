@@ -66,7 +66,7 @@ public class MemberLoginServiceImpl implements MemberLoginService {
 		
 		if (groupUUID != null) {
 			String urlHeader = param.get("urlHeader");
-			String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID);
+			String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID).get(0);
 			
 			userInfo.put("img", urlHeader + serverPath);
 		}

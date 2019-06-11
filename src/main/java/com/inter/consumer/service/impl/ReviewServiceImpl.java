@@ -33,32 +33,23 @@ public class ReviewServiceImpl implements ReviewService {
 		
 		String token = param.get("token");
 		
-		if (token == null) {
-			result.put("resultCode", 403);
-			messageUtil.addResultMsg(param, result);
-			return gson.toJson(result);
-		} else {
-			Integer appUserId = reviewDao.getUserIdByToken(token);
+		Integer appUserId = reviewDao.getUserIdByToken(token);
+		
+		if (appUserId != null) {
+			param.put("appUserId", String.valueOf(appUserId));
+			Long sequence = Long.parseLong(param.get("sequence"));
+			Integer orderSeq = reviewDao.getOrderNumberBySequence(sequence);
 			
-			if (appUserId == null) {
-				result.put("resultCode", 403);
-				messageUtil.addResultMsg(param, result);
-				return gson.toJson(result);
-			} else {
-				param.put("appUserId", String.valueOf(appUserId));
+			param.put("orderSeq", String.valueOf(orderSeq));
+			
+			try {
+				reviewDao.insertProdReview(param);
+				result.put("resultCode", 200);
+			} catch (Exception e) {
+				result.put("resultCode", 500);
 			}
-		}
-		
-		Long sequence = Long.parseLong(param.get("sequence"));
-		Integer orderSeq = reviewDao.getOrderNumberBySequence(sequence);
-		
-		param.put("orderSeq", String.valueOf(orderSeq));
-		
-		try {
-			reviewDao.insertProdReview(param);
-			result.put("resultCode", 200);
-		} catch (Exception e) {
-			result.put("resultCode", 500);
+		} else {
+			result.put("resultCode", 403);
 		}
 		
 		messageUtil.addResultMsg(param, result);
@@ -71,25 +62,12 @@ public class ReviewServiceImpl implements ReviewService {
 		Map<String, Object> result = new HashMap<String, Object>();
 		Gson gson = new Gson();
 		
-		/*
-		String token = param.get("token");
-		
-		Integer appUserId = reviewDao.getUserIdByToken(token);
-		
-		if (appUserId == null) {
-			result.put("resultCode", 403);
-			messageUtil.addResultMsg(param, result);
-			return gson.toJson(result);
-		}
-		*/
-		
 		String sequence = param.get("sequence");
-		if (sequence != null) {
+		if (!"0".equals(sequence)) {
 			Long sequenceLong = Long.parseLong(sequence);
 			Integer orderSeq = reviewDao.getOrderNumberBySequence(sequenceLong);
 			param.put("orderSeq", String.valueOf(orderSeq));
 		}
-		
 		
 		String prodName = reviewDao.getProdNameByOrderSeq(param);
 		result.put("prodName", prodName);
@@ -97,6 +75,7 @@ public class ReviewServiceImpl implements ReviewService {
 		String bizName = reviewDao.getBizNameByOrderSeq(param);
 		result.put("bizName", bizName);
 		
+		// Count & Score
 		Map<String, Object> reviewInfo = detailInfoDao.getReviewInfo(param);
 		result.putAll(reviewInfo);
 		
@@ -107,7 +86,7 @@ public class ReviewServiceImpl implements ReviewService {
 			String groupUUID = (String) review.get("profileURL");
 			
 			if (groupUUID != null) {
-				String imgPath = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+				String imgPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
 				review.put("profileURL", param.get("urlHeader") + imgPath);
 			}
 		}

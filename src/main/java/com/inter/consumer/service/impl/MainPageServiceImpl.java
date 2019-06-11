@@ -1,5 +1,6 @@
 package com.inter.consumer.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
+import com.inter.consumer.dao.DetailInfoDao;
 import com.inter.consumer.dao.MainPageDao;
 import com.inter.consumer.service.MainPageService;
 import com.inter.util.ResultMessageUtil;
@@ -17,6 +19,9 @@ public class MainPageServiceImpl implements MainPageService {
 
 	@Autowired
 	private MainPageDao mainPageDao;
+	
+	@Autowired
+	private DetailInfoDao detailInfoDao;
 
 	@Autowired
 	private ResultMessageUtil messageUtil;
@@ -36,7 +41,7 @@ public class MainPageServiceImpl implements MainPageService {
 		List<Map<String, Object>> brandList = mainPageDao.getRandomCorpImgList(param);
 		
 		for(Map<String, Object> brand : brandList) {
-			brand.put("corpImgURL", param.get("urlHeader") + brand.get("corpImgURL"));
+			brand.put("corpImgUrl", param.get("urlHeader") + brand.get("corpImgUrl"));
 		}
 		
 		result.put("brandList", brandList);
@@ -46,7 +51,7 @@ public class MainPageServiceImpl implements MainPageService {
 		
 		List<Map<String, Object>> reviewList = mainPageDao.getProdImgListByReview(paramObj);
 		for(Map<String, Object> review : reviewList) {
-			review.put("prodImgURL", param.get("urlHeader") + review.get("prodImgURL"));
+			review.put("prodImgUrl", param.get("urlHeader") + review.get("prodImgUrl"));
 		}
 		
 		result.put("reviewList", reviewList);
@@ -63,7 +68,7 @@ public class MainPageServiceImpl implements MainPageService {
 			
 			List<Map<String, Object>> detectList = mainPageDao.getProdImgListByDetectRecord(param);
 			for(Map<String, Object> detect : detectList) {
-				detect.put("prodImgURL", param.get("urlHeader") + detect.get("prodImgURL"));
+				detect.put("prodImgUrl", param.get("urlHeader") + detect.get("prodImgUrl"));
 			}
 			result.put("detectList", detectList);
 		}
@@ -90,7 +95,7 @@ public class MainPageServiceImpl implements MainPageService {
 		List<Map<String, Object>> reviewList = mainPageDao.getProdImgListByReview(paramObj);
 		
 		for(Map<String, Object> review : reviewList) {
-			review.put("prodImgURL", param.get("urlHeader") + review.get("prodImgURL"));
+			review.put("prodImgUrl", param.get("urlHeader") + review.get("prodImgUrl"));
 		}
 		
 		result.put("reviewList", reviewList);
@@ -113,7 +118,7 @@ public class MainPageServiceImpl implements MainPageService {
 			
 			List<Map<String, Object>> detectList = mainPageDao.getProdImgListByDetectRecord(param);
 			for(Map<String, Object> detect : detectList) {
-				detect.put("prodImgURL", param.get("urlHeader") + detect.get("prodImgURL"));
+				detect.put("prodImgUrl", param.get("urlHeader") + detect.get("prodImgUrl"));
 			}
 			result.put("detectList", detectList);
 		}
@@ -127,16 +132,31 @@ public class MainPageServiceImpl implements MainPageService {
 	@Override
 	public String getNoticeList(Map<String, String> param) {
 		
+		Map<String, Object> result = new HashMap<String, Object>();
+		Gson gson = new Gson();
+		
 		List<Map<String, Object>> noticeList = mainPageDao.getNoticeList(param);
 		
 		for(Map<String, Object> notice : noticeList) {
 			String groupUUID = (String) notice.get("groupUUID");
 			
-			if (notice.get("groupUUID") != null) {
+			if (groupUUID != null) {
+				List<String> imgList = new ArrayList<>();
 				
+				List<String> imgPathList = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+				
+				for(String imgPath : imgPathList) {
+					imgList.add(param.get("urlHeader") + imgPath);
+				}
+				
+				notice.remove("groupUUID");
+				notice.put("imgList", imgList);
 			}
 		}
-		return null;
+		
+		result.put("noticeList", noticeList);
+		result.put("resultCode", 200);
+		return gson.toJson(result);
 	}
 
 }

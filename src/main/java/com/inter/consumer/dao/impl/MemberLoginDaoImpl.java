@@ -1,5 +1,6 @@
 package com.inter.consumer.dao.impl;
 
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -44,8 +45,8 @@ public class MemberLoginDaoImpl implements MemberLoginDao {
 	}
 
 	@Override
-	public String getImgPathByGroupUUID(String groupUUID) {
-		return sqlSessionTemplate.selectOne(NAMESPACE + "getImgPathByGroupUUID", groupUUID);
+	public List<String> getImgPathByGroupUUID(String groupUUID) {
+		return sqlSessionTemplate.selectList(NAMESPACE + "getImgPathByGroupUUID", groupUUID);
 	}
 
 }

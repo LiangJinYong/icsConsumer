@@ -33,7 +33,7 @@ public class ModifyUserInfoServiceImpl implements ModifyUserInfoService {
 	private FileUtil fileUtil;
 	
 	@Transactional
-	public String modifyUserInfo(Map<String, String> param, HttpServletRequest request) {
+	public String modifyUserInfo(Map<String, String> param) {
 		Map<String, Object> result = new HashMap<String, Object>();
 		Gson gson = new Gson();
 		
@@ -55,7 +55,7 @@ public class ModifyUserInfoServiceImpl implements ModifyUserInfoService {
 		
 		if (groupUUID != null) {
 			String urlHeader = param.get("urlHeader");
-			String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID);
+			String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID).get(0);
 			
 			userInfo.put("img", urlHeader + serverPath);
 		}
@@ -88,7 +88,7 @@ public class ModifyUserInfoServiceImpl implements ModifyUserInfoService {
 		}
 		
 		try {
-			List<Map<String, Object>> imgInfoList = fileUtil.parseInsertImgInfo(request);
+			List<Map<String, Object>> imgInfoList = fileUtil.parseInsertImgInfo(request, "PROF");
 			
 			if (imgInfoList.size() > 0) {
 				paramObj.put("groupUUID", imgInfoList.get(0).get("groupUUID"));
@@ -97,7 +97,6 @@ public class ModifyUserInfoServiceImpl implements ModifyUserInfoService {
 				modifyUserInfoDao.updateUserImgId(paramObj);
 				modifyUserInfoDao.insertImg(paramObj);
 			}
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			result.put("resultCode", 430);
@@ -111,7 +110,7 @@ public class ModifyUserInfoServiceImpl implements ModifyUserInfoService {
 		
 		if (groupUUID != null) {
 			String urlHeader = param.get("urlHeader");
-			String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID);
+			String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID).get(0);
 			
 			userInfo.put("img", urlHeader + serverPath);
 		}

@@ -80,7 +80,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getDetailInfo" parameterType="map" resultType="hashmap">
 		/* getDetailInfo */
-		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM 
+		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN
 		FROM app_detail_info adi
 		WHERE order_seq = #{orderSeq}
 		AND country_cd = #{countryCode}
@@ -98,14 +98,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getImgPathByGroupUUID" parameterType="string" resultType="string">
 		/* getImgPathByGroupUUID */
-		SELECT 
-			(SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
-	        FROM   lian_fileattach fa	
-	        WHERE  fa.groupuuid = #{groupUUID}) prodImgPath
-        FROM (SELECT comm_cd_val_nm, comm_cd_val_desc
-				FROM   licom_comm_cd_dtl
-				WHERE  comm_cd_id       = 'FTP_SERVER_DIR'
-				AND    comm_cd_val_desc = 'detail') comm
+		SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) imgList
+      	FROM   lian_fileattach fa,
+         (SELECT comm_cd_val_nm, comm_cd_val_desc
+			FROM   licom_comm_cd_dtl
+			WHERE  comm_cd_id       = 'FTP_SERVER_DIR'
+			AND    comm_cd_val_desc = 'detail') comm        
+		    WHERE  fa.groupuuid = #{groupUUID}
 	</select>
 
 	<!-- Physical Distribution List -->
@@ -324,6 +323,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		 AND EFF_END_DT = '99991231'
 	</select>
 
+	<!-- Common Code -->
 	<select id="getCommonCodeValueName" parameterType="map" resultType="string">
 		/* getCommonCodeValueName */
 		 SELECT COMM_CD_VAL_NM
@@ -729,7 +729,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getReviewList" parameterType="map" resultType="hashmap">
 		/* getReviewList */
-		SELECT au.groupuuid profileURL, apr.review_score score, IFNULL(au.nick_nm, CONCAT(LEFT(au.login_id, 4), '*****')) nickName, DATE_FORMAT(apr.rgst_dt, '%y.%m.%d') date, apr.review_content content, apr.audit_dtm time
+		SELECT au.groupuuid profileUrl, apr.review_score score, IFNULL(au.nick_nm, CONCAT(LEFT(au.login_id, 4), '*****')) nickName, DATE_FORMAT(apr.rgst_dt, '%y.%m.%d') date, apr.review_content content, apr.audit_dtm time
 		FROM app_prod_review apr 
 		INNER JOIN app_user au
 		ON apr.app_user_id = au.app_user_id
@@ -759,14 +759,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		/* getRandomCorpImgList */
 		SELECT (SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
 				FROM lian_fileattach fa
-		        WHERE fa.groupuuid = libi.value) AS bizLogoPath 
+		        WHERE fa.groupuuid = libi.value) AS corpImgUrl 
 		FROM lian_intl_biz_info libi,
+		lian_biz_info lbi,
 			(SELECT comm_cd_val_nm, comm_cd_val_desc
 		      FROM licom_comm_cd_dtl
 		      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
             	AND comm_cd_val_desc = 'detail') AS comm
-		WHERE country_cd = #{countryCode}
-		AND title = 'LOGO_UUID'
+		WHERE libi.biz_id = lbi.biz_id
+		AND libi.country_cd = #{countryCode}
+		AND libi.title = 'LOGO_UUID'
+		AND lbi.rel_ctrt_yn = 'Y'
 		ORDER BY RAND()
 		LIMIT 20
 	</select>
@@ -782,7 +785,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		SELECT (SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) 
 		        FROM lian_fileattach fa
 		        WHERE fa.groupuuid = adi.detail_val)
-		          AS prodImgURL, orderSeq.order_seq
+		          AS prodImgUrl, orderSeq.order_seq orderSeq
 		<include refid="reviewTable" />
 		ORDER BY orderSeq.cnt DESC
 		<choose>
@@ -816,7 +819,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getProdImgListByDetectRecord" parameterType="map" resultType="hashmap">
 		/* getProdImgListByDetectRecord */
-		SELECT (SELECT CONCAT('/' ,comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) FROM lian_fileattach fa WHERE fa.groupuuid = adi.detail_val) AS prodImgURL
+		SELECT (SELECT CONCAT('/' ,comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) FROM lian_fileattach fa WHERE fa.groupuuid = adi.detail_val) AS prodImgUrl
 			, log.sequence
 			, DATE_FORMAT(log.at_date, '%Y-%m-%d %H:%i:%s') time
 		<include refid="detectTable" />
@@ -854,10 +857,29 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		AND dtl.country_cd = #{countryCode}
 		AND dtl.comm_cd_id = 'NTC_TYPE'
 		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
-		<if test="time != null">
-			ntc.audit_dtm &lt; #{time}
+		<if test="time != ''">
+			AND ntc.audit_dtm &lt; #{time}
 		</if>
 		ORDER BY ntc.audit_dtm DESC
+		LIMIT 20
+	</select>
+	
+	<!-- Service Center -->
+	<insert id="insertReportOrQuestion" parameterType="map">
+		/* insertReportOrQuestion */
+		INSERT INTO app_svc_cntr (cntr_typ_cd, app_user_id, country_cd, location_cd, req_content, uuid_arr)
+		VALUES (#{type}, #{appUserId}, #{countryCode}, IFNULL(#{locationCd}, 'ZZ'), #{content}, #{groupUUID})
+	</insert>
+	
+	<select id="getMyQuestionList" parameterType="map" resultType="hashmap">
+		/* getMyQuestionList */
+		SELECT req_content content, DATE_FORMAT(req_dtm, '%Y-%m-%d') date, cntr_typ_cd type, 'N' answerYn
+		FROM app_svc_cntr
+		WHERE app_user_id = #{appUserId}
+		<if test="time != ''">
+			AND req_dtm &lt; #{time}
+		</if>
+		ORDER by req_content DESC
 		LIMIT 20
 	</select>
 </mapper>

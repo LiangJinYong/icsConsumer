@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
 import com.inter.consumer.dao.DetailInfoDao;
 import com.inter.consumer.service.DetailInfoService;
+import com.inter.util.CommonCodeUtil;
 import com.inter.util.ResultMessageUtil;
 
 @Service
@@ -23,7 +24,10 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 
 	@Autowired
 	private ResultMessageUtil messageUtil;
-
+	
+	@Autowired
+	private CommonCodeUtil commonCodeUtil;
+	
 	public String detailInfo(Map<String, String> param) {
 
 		Map<String, Object> result = new HashMap<String, Object>();
@@ -34,7 +38,7 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 		String auth = "AU06";
 		if (token != null) {
 			auth = detailInfoDao.getUserAuthByToken(token);
-			if (auth == null) {
+ 			if (auth == null) {
 				auth = "AU06";
 			}
 		}
@@ -56,6 +60,7 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 			
 			List<Map<String, Object>> topList = new ArrayList<>();
 			List<Map<String, Object>> defList = new ArrayList<>();
+			List<Map<String, Object>> manList = new ArrayList<>();
 			
 			List<Map<String, Object>> detailInfo = detailInfoDao.getDetailInfo(param);
 			
@@ -109,12 +114,12 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 					param.put("codeId", "CHAIN_URL");
 					param.put("codeValue", "GET_DIST_DATA");
 					
-					String blockChainURL = messageUtil.getCommonCodeValueName(param);
+					String blockChainURL = commonCodeUtil.getCommonCodeValueName(param);
 					
 					result.put("blockChainURL", blockChainURL + param.get("sequence") + "/");
 				} else if ("M07".equals(typeCode) && "Y".equals(blockChainYn)) {
 					param.put("codeValue", "GET_DELIVERY_DATA");
-					String blockChainDeliveryURL = messageUtil.getCommonCodeValueName(param);
+					String blockChainDeliveryURL = commonCodeUtil.getCommonCodeValueName(param);
 					
 					result.put("blockChainDeliveryURL", blockChainDeliveryURL);
 				}
@@ -135,20 +140,23 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 							detailItem.put("DETAIL_VAL", currentSeqInfo.get(detailVal));
 						}
 					}
-					
-					String iconName = (String) detailItem.get("ICON_NM");
-					detailItem.put("ICON_NM", urlHeader + iconName);
+					param.put("codeId", "APP_ICON_FILE_DIR");
+					param.put("codeValue", (String) detailItem.get("ICON_NM"));
+
+					String iconPath = commonCodeUtil.getCommonCodeValueName(param);
+					detailItem.put("ICON_NM", urlHeader + iconPath);
 					
 					topList.add(detailItem);
 				} else if ("DEF".equals(groupCode)) {
 					defList.add(detailItem);
 				} else if ("MAN".equals(groupCode)) {
-					data.put("MAN", detailItem);
+					manList.add(detailItem);
 				}
 			}
 			
 			data.put("TOP", topList);
 			data.put("DEF", defList);
+			data.put("MAN", manList);
 			
 			result.put("data", data);
 		}
@@ -162,7 +170,7 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 
 	private String getImgPath(String urlHeader, String groupUUID) {
 		
-		String serverPath = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+		String serverPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
 		
 		return urlHeader + serverPath;
 	}
