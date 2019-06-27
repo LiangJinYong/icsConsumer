@@ -1,5 +1,6 @@
 package com.inter.consumer.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
+import com.inter.consumer.dao.DetailInfoDao;
 import com.inter.consumer.dao.MemberLoginDao;
 import com.inter.consumer.dao.ServiceCenterDao;
 import com.inter.consumer.service.ServiceCenterService;
@@ -30,6 +32,9 @@ public class ServiceCenterServiceImpl implements ServiceCenterService {
 
 	@Autowired
 	private FileUtil fileUtil;
+	
+	@Autowired
+	private DetailInfoDao detailInfoDao;
 	
 	@Override
 	public String reportAndQuestion(Map<String, String> param, HttpServletRequest request) {
@@ -101,6 +106,48 @@ public class ServiceCenterServiceImpl implements ServiceCenterService {
 		result.put("data", myQuestionList);
 		
 		result.put("resultCode", 200);
+		messageUtil.addResultMsg(param, result);
+		return gson.toJson(result);
+	}
+
+	@Override
+	public String getAnswer(Map<String, String> param, HttpServletRequest request) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		Gson gson = new Gson();
+		
+		Map<String, Object> paramObj = new HashMap<>();
+		paramObj.putAll(param);
+		
+		String token = param.get("token");
+		Integer userId = memberLoginDao.getUserIdByToken(token);
+		
+		if (userId == null) {
+			
+			result.put("resultCode", 403);
+
+			messageUtil.addResultMsg(param, result);
+			return gson.toJson(result);
+		}
+		
+		Map<String, Object> answer = serviceCenterDao.getAnswerById(param);
+		
+		String groupUUID = (String) answer.get("groupUUID");
+		if (groupUUID != null) {
+			List<String> imgList = new ArrayList<>();
+			
+			List<String> imgPathList = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+			
+			for(String imgPath : imgPathList) {
+				imgList.add(param.get("urlHeader") + imgPath);
+			}
+			
+			answer.remove("groupUUID");
+			answer.put("imgList", imgList);
+		}
+		
+		result.put("resultCode", 200);
+		result.putAll(answer);
+		
 		messageUtil.addResultMsg(param, result);
 		return gson.toJson(result);
 	}

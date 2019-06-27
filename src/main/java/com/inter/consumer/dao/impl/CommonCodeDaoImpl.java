@@ -11,7 +11,7 @@ import com.inter.consumer.dao.CommonCodeDao;
 @Repository
 public class CommonCodeDaoImpl implements CommonCodeDao {
 
-private static final String NAMESPACE = "com.inter.consumer.";
+	private static final String NAMESPACE = "com.inter.consumer.";
 	
 	@Autowired
 	private SqlSessionTemplate sqlSessionTemplate;

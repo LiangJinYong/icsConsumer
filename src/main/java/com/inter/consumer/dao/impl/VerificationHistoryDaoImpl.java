@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import com.inter.consumer.dao.VerificationHistoryDao;
@@ -15,7 +14,6 @@ public class VerificationHistoryDaoImpl implements VerificationHistoryDao {
 	private static final String NAMESPACE = "com.inter.consumer.";
 	
 	@Autowired
-	@Qualifier("orderSqlSession")
 	private SqlSessionTemplate orderSqlSessionTemplate;
 	
 	public Map<String, Object> getOrderInfo(String sequence) {
@@ -55,6 +53,11 @@ public class VerificationHistoryDaoImpl implements VerificationHistoryDao {
 	@Override
 	public String getRuleCheckMsg(Map<String, String> param) {
 		return orderSqlSessionTemplate.selectOne(NAMESPACE + "getRuleCheckMsg", param);
+	}
+
+	@Override
+	public void insertFailureReportInfo(Map<String, Object> reportMap) {
+		orderSqlSessionTemplate.insert(NAMESPACE + "insertFailureReportInfo", reportMap);
 	}
 
 

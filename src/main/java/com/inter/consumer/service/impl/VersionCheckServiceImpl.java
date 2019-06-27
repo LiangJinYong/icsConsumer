@@ -1,6 +1,7 @@
 package com.inter.consumer.service.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ public class VersionCheckServiceImpl implements VersionCheckService {
 			
 			String encryptedKey = versionCheckDao.getEncrptedKey();
 			result.put("encryptedKey", encryptedKey);
+			
+			List<String> qrExclusiveUrlList = versionCheckDao.getQrExclusiveUrlList();
+			result.put("qrExclusiveUrlList", qrExclusiveUrlList);
 		} else {
 			result.put("resultCode", 500);
 		}

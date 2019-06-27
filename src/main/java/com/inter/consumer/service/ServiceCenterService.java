@@ -10,4 +10,6 @@ public interface ServiceCenterService {
 
 	String getMyQuestionList(Map<String, String> param);
 
+	String getAnswer(Map<String, String> param, HttpServletRequest request);
+
 }

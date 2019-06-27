@@ -41,5 +41,26 @@ public class DetailInfoDaoImpl implements DetailInfoDao {
 	public List<String> getImgPathByGroupUUID(String groupUUID) {
 		return sqlSessionTemplate.selectList(NAMESPACE + "getImgPathByGroupUUID", groupUUID);
 	}
+	
+	@Override
+	public Map<String, Object> getDetailContent(Map<String, String> param) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getDetailContent", param);
+	}
+
+	// CN
+	@Override
+	public Map<String, Object> getCurrentSeqInfoCN(Map<String, String> param) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getCurrentSeqInfoCN", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> getIconColorInfo(Map<String, String> param) {
+		return sqlSessionTemplate.selectList(NAMESPACE + "getIconColorInfo", param);
+	}
+
+	@Override
+	public List<Map<String, Object>> getDetailinfoCN(Map<String, String> param) {
+		return sqlSessionTemplate.selectList(NAMESPACE + "getDetailinfoCN", param);
+	}
 
 }

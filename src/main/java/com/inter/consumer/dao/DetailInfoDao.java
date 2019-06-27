@@ -15,4 +15,13 @@ public interface DetailInfoDao {
 
 	List<String> getImgPathByGroupUUID(String groupUUID);
 
+	Map<String, Object> getDetailContent(Map<String, String> param);
+
+	// CN
+	Map<String, Object> getCurrentSeqInfoCN(Map<String, String> param);
+
+	List<Map<String, Object>> getIconColorInfo(Map<String, String> param);
+
+	List<Map<String, Object>> getDetailinfoCN(Map<String, String> param);
+
 }

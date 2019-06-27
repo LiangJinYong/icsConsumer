@@ -22,4 +22,6 @@ public interface VerificationHistoryDao {
 
 	String getRuleCheckMsg(Map<String, String> param);
 
+	void insertFailureReportInfo(Map<String, Object> reportMap);
+
 }

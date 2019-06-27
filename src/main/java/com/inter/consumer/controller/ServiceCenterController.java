@@ -46,4 +46,19 @@ public class ServiceCenterController {
 		String result = serviceCenterService.getMyQuestionList(param);
 		return result;
 	}
+	
+	@RequestMapping("/getAnswer")
+	@ResponseBody
+	public String getAnswer(HttpServletRequest request) {
+		Map<String, String[]> paramMap = request.getParameterMap();
+		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
+		
+		RequestParamUtil.putUrlHeader(request, param);
+		
+		String token = request.getHeader("token");
+		param.put("token", token);
+		
+		String result = serviceCenterService.getAnswer(param, request);
+		return result;
+	}
 }

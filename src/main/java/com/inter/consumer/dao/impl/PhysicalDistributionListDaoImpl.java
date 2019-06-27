@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import com.inter.consumer.dao.PhysicalDistributionListDao;
@@ -14,8 +13,8 @@ import com.inter.consumer.dao.PhysicalDistributionListDao;
 public class PhysicalDistributionListDaoImpl implements PhysicalDistributionListDao {
 
 	private static final String NAMESPACE = "com.inter.consumer.";
+	
 	@Autowired
-	@Qualifier("orderSqlSession")
 	private SqlSessionTemplate sqlSessionTemplate;
 
 	public List<Map<String, Object>> queryPhysicalDistributionInfo(String sequence) {

@@ -150,7 +150,31 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 				} else if ("DEF".equals(groupCode)) {
 					defList.add(detailItem);
 				} else if ("MAN".equals(groupCode)) {
+					if ("N03".equals(typeCode)) {
+						String imgPath = getImgPath(urlHeader, detailVal);
+						detailItem.put("DETAIL_VAL", imgPath);
+					}
 					manList.add(detailItem);
+				}
+			}
+			
+			Map<String, Object> detailContent = detailInfoDao.getDetailContent(param);
+			
+			if (detailContent != null) {
+				for(int i=1; i<5; i++) {
+					String content = (String) detailContent.get("detail_ctt" + i);
+					
+					if (content != null) {
+						String[] split = content.split("\\^");
+						
+						if (split.length == 2) {
+							Map<String, Object> contentMap = new HashMap<>();
+							contentMap.put("DETAIL_TITLE", split[0]);
+							contentMap.put("DETAIL_VAL", split[1]);
+							contentMap.put("DETAIL_TYP_CD", "N01");
+							defList.add(contentMap);
+						}
+					}
 				}
 			}
 			

@@ -32,4 +32,9 @@ public class ServiceCenterDaoImpl implements ServiceCenterDao {
 		return sqlSessionTemplate.selectList(NAMESPACE + "getMyQuestionList", param);
 	}
 
+	@Override
+	public Map<String, Object> getAnswerById(Map<String, String> param) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getAnswerById", param);
+	}
+
 }

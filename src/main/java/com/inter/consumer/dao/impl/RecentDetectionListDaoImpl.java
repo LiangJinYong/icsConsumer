@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
 import com.inter.consumer.dao.RecentDetectionListDao;
@@ -16,7 +15,6 @@ public class RecentDetectionListDaoImpl implements RecentDetectionListDao {
 	private static final String NAMESPACE = "com.inter.consumer.";
 
 	@Autowired
-	@Qualifier("orderSqlSession")
 	private SqlSessionTemplate sqlSessionTemplate;
 	
 	public int getUserCountByIdToken(Map<String, String> param) {

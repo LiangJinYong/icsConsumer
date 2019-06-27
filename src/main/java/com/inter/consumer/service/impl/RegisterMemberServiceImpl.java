@@ -94,9 +94,14 @@ public class RegisterMemberServiceImpl implements RegisterMemberService {
 			
 			Map<String, Object> userInfo = memberLoginDao.getUserInfoById(param);
 			
+			String groupUUID = (String) userInfo.get("groupUUID");
 			
-			byte[] img = (byte[]) userInfo.get("img");
-			userInfo.put("img", Base64.getEncoder().encodeToString(img));
+			if (groupUUID != null) {
+				String urlHeader = param.get("urlHeader");
+				String serverPath = memberLoginDao.getImgPathByGroupUUID(groupUUID).get(0);
+				
+				userInfo.put("img", urlHeader + serverPath);
+			}
 			
 			result.putAll(userInfo);
 			result.put("token", token);

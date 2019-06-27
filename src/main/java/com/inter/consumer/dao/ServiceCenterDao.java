@@ -11,4 +11,6 @@ public interface ServiceCenterDao {
 
 	List<Map<String, Object>> getMyQuestionList(Map<String, String> param);
 
+	Map<String, Object> getAnswerById(Map<String, String> param);
+
 }

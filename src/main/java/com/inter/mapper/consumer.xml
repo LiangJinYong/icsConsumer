@@ -25,6 +25,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		WHERE comm_cd_id	= 'CRYPT_KEY'
 		AND eff_end_dt		= '99991231'
 	</select>
+	
+	<select id="getQrExclusiveUrlList" resultType="string">
+		/* getQrExclusiveUrlList */
+		SELECT comm_cd_val_nm 
+		FROM licom_comm_cd_dtl 
+		WHERE comm_cd_id = 'QR_EXCPT_URL_LST' 
+		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN eff_sta_dt AND eff_end_dt
+	</select>
 
 	<!-- Register Question -->
 	<insert id="insertAppQuestion" parameterType="map">
@@ -68,7 +76,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		FROM licom_comm_cd_dtl
 		WHERE comm_cd_id = 'CRYPT_KEY';
 		
-		SELECT seq.ORDER_SEQ, DATE_FORMAT(seq.PROD_MAKE_DT, '%Y/%m/%d') PROD_MAKE_DT, DATE_FORMAT(seq.PROD_OUT_DT, '%Y/%m/%d') PROD_OUT_DT, DATE_FORMAT(seq.PROD_EXP_DT, '%Y/%m/%d') PROD_EXP_DT
+		SELECT seq.sequence SEQUENCE, seq.ORDER_SEQ, DATE_FORMAT(seq.PROD_MAKE_DT, '%Y/%m/%d') PROD_MAKE_DT, DATE_FORMAT(seq.PROD_OUT_DT, '%Y/%m/%d') PROD_OUT_DT, DATE_FORMAT(seq.PROD_EXP_DT, '%Y/%m/%d') PROD_EXP_DT
 		, edi.DETECT_COUNT, DATE_FORMAT(edi.LAST_DETECT_TIME, '%Y-%m-%d %H:%i:%s') LAST_DETECT_TIME, CAST(AES_DECRYPT(unhex(edi.LAST_LOCATION), @crypt_key) AS CHAR) LAST_LOCATION
 		, CASE WHEN (SELECT COUNT(*) FROM app_physical_distribution WHERE sequence = #{sequence}) > 0 THEN 'Y' ELSE 'N' END DISTRIBUTION_YN
 		, DATEDIFF(seq.prod_exp_dt, CURDATE()) + 1 REMAIN_DT
@@ -80,13 +88,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getDetailInfo" parameterType="map" resultType="hashmap">
 		/* getDetailInfo */
-		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN
+		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN, MAN_YN
 		FROM app_detail_info adi
 		WHERE order_seq = #{orderSeq}
 		AND country_cd = #{countryCode}
 		AND auth_cd >= #{auth}
 		AND dsp_yn = 'Y'
-		ORDER BY sort_no ASC
+		ORDER BY auth_cd DESC, sort_no ASC 
 	</select>
 	
 	<select id="getReviewInfo" parameterType="map" resultType="hashmap">
@@ -106,7 +114,51 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			AND    comm_cd_val_desc = 'detail') comm        
 		    WHERE  fa.groupuuid = #{groupUUID}
 	</select>
+	
+	<select id="getDetailContent" parameterType="map" resultType="hashmap">
+		/* getDetailContent */
+		SELECT detail_ctt1, detail_ctt2, detail_ctt3, detail_ctt4, detail_ctt5
+		FROM app_seq 
+		WHERE sequence = #{sequence}
+	</select>
 
+	<!-- Detail Info CN -->
+	<select id="getCurrentSeqInfoCN" parameterType="map" resultType="hashmap">
+		/* getCurrentSeqInfoCN */
+		SELECT seq.ORDER_SEQ orderSeq, DATE_FORMAT(seq.PROD_MAKE_DT, '%Y/%m/%d') PROD_MAKE_DT, DATE_FORMAT(seq.PROD_OUT_DT, '%Y/%m/%d') PROD_OUT_DT, DATE_FORMAT(seq.PROD_EXP_DT, '%Y/%m/%d') PROD_EXP_DT
+		, edi.DETECT_COUNT detectCount , DATE_FORMAT(edi.LAST_DETECT_TIME, '%Y-%m-%d %H:%i:%s') lastDetectTime, LAST_LOCATION lastAddress
+		, (SELECT COUNT(*) FROM app_physical_distribution WHERE sequence = #{sequence}) logisticsCount
+		, DATEDIFF(seq.prod_exp_dt, CURDATE()) + 1 REMAIN_DT
+		FROM app_seq seq
+		LEFT JOIN app_extended_detail_info edi
+		ON seq.sequence = edi.sequence
+		WHERE seq.sequence = #{sequence}
+	</select>
+	
+	<select id="getIconColorInfo" parameterType="map" resultType="hashmap">
+		/* getIconColorInfo */
+		SELECT detail_typ_cd typeCode, detail_title title, detail_val value, icon_nm iconName
+		FROM app_detail_info 
+		WHERE country_cd = #{countryCode} 
+		AND order_seq = #{orderSeq}
+		AND dsp_yn = 'Y' 
+		AND (icon_nm IN ('MATR', 'NUTR') OR detail_title = 'COLOR_VAL' OR detail_typ_cd = 'M02')
+	</select>
+	
+	<select id="getDetailinfoCN" parameterType="map" resultType="hashmap">
+		/* getDetailinfoCN */
+		SELECT detail_title title, detail_val content 
+		FROM app_detail_info
+		WHERE country_cd = #{countryCode}
+		AND order_seq = #{orderSeq}
+		AND detail_grp_cd = 'DEF'
+		AND detail_typ_cd IN ('N01', 'N02', 'N99')
+		AND detail_val NOT IN ('DETECT_COUNT', 'LAST_LOCATION', 'LAST_DETECT_TIME')
+		AND dsp_yn = 'Y'
+		AND auth_cd >= #{authCd}
+		ORDER BY sort_no
+	</select>
+	
 	<!-- Physical Distribution List -->
 	<select id="queryPhysicalDistributionInfo" parameterType="string" resultType="hashmap">
 		/* queryPhysicalDistributionInfo */
@@ -672,7 +724,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		WHERE a.APP_USER_ID = #{appUserId}
 	      AND a.RGST_YMD BETWEEN date_format(date_add(#{currentDate}, INTERVAL -1 MONTH), '%Y%m%d') AND #{currentDate}
 	      AND a.COUNTRY_CD = #{countryCode}
-     ORDER BY a.AT_DATE DESC
+     	ORDER BY a.AT_DATE DESC
 	</select>
 	
 	<!-- Sequence Info -->
@@ -729,13 +781,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getReviewList" parameterType="map" resultType="hashmap">
 		/* getReviewList */
-		SELECT au.groupuuid profileUrl, apr.review_score score, IFNULL(au.nick_nm, CONCAT(LEFT(au.login_id, 4), '*****')) nickName, DATE_FORMAT(apr.rgst_dt, '%y.%m.%d') date, apr.review_content content, apr.audit_dtm time
+		SELECT au.groupuuid profileUrl, apr.id reviewId, apr.review_score score, IFNULL(au.nick_nm, CONCAT(LEFT(au.login_id, 4), '*****')) nickName, DATE_FORMAT(apr.rgst_dt, '%y.%m.%d') date, apr.review_content content, DATE_FORMAT(apr.audit_dtm, '%Y-%m-%d %H:%i:%s') time
 		FROM app_prod_review apr 
 		INNER JOIN app_user au
 		ON apr.app_user_id = au.app_user_id
 		WHERE order_seq = #{orderSeq}
 		<if test="time != ''">
-			AND apr.audit_dtm &lt; #{time}
+			AND apr.audit_dtm &lt;= #{time}
 		</if>
 		ORDER BY apr.audit_dtm DESC
 		LIMIT 20
@@ -749,8 +801,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		INNER JOIN licom_comm_cd_dtl dtl on ntc.ntc_typ_cd = dtl.comm_cd_val
 		WHERE ntc.country_cd = #{countryCode}
 		AND dtl.country_cd = #{countryCode}
-		AND dtl.comm_cd_id = 'NTC_TYPE'
+		AND ntc.ntc_grp_cd = '01'
+		AND dtl.comm_cd_id = 'NTC_TYP_CD'
 		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
+		AND view_yn = 'Y'
 		ORDER BY ntc.audit_dtm DESC
 		LIMIT 1
 	</select>
@@ -850,13 +904,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getNoticeList" parameterType="map" resultType="hashmap">
 		/* getNoticeList */
-		SELECT ntc_title title, dtl.comm_cd_val_nm category, DATE_FORMAT(rgst_dt, '%Y-%m-%d') date, ntc_content content, uuid groupUUID
+		SELECT ntc_title title, DATE_FORMAT(rgst_dt, '%Y-%m-%d') date, DATE_FORMAT(ntc.audit_dtm, '%Y-%m-%d %H:%i:%s') time, ntc_content content, uuid groupUUID
+		<if test="type == '01'">
+			, dtl.comm_cd_val_nm category
+		</if>
 		FROM app_ntc ntc
-		INNER JOIN licom_comm_cd_dtl dtl on ntc.ntc_typ_cd = dtl.comm_cd_val
+		<if test="type == '01'">
+			INNER JOIN licom_comm_cd_dtl dtl on ntc.ntc_typ_cd = dtl.comm_cd_val
+		</if>
 		WHERE ntc.country_cd = #{countryCode}
-		AND dtl.country_cd = #{countryCode}
-		AND dtl.comm_cd_id = 'NTC_TYPE'
-		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
+		AND ntc.ntc_grp_cd = #{type}
+		AND view_yn = 'Y'
+		<if test="type == '01'">
+			AND dtl.country_cd = #{countryCode}
+			AND dtl.comm_cd_id = 'NTC_TYP_CD'
+			AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
+		</if>
 		<if test="time != ''">
 			AND ntc.audit_dtm &lt; #{time}
 		</if>
@@ -868,18 +931,38 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<insert id="insertReportOrQuestion" parameterType="map">
 		/* insertReportOrQuestion */
 		INSERT INTO app_svc_cntr (cntr_typ_cd, app_user_id, country_cd, location_cd, req_content, uuid_arr)
-		VALUES (#{type}, #{appUserId}, #{countryCode}, IFNULL(#{locationCd}, 'ZZ'), #{content}, #{groupUUID})
+		VALUES (#{type}, #{appUserId}, #{countryCode}
+		, IFNULL(#{locationCd}, 'ZZ'),
+		<choose>
+			<when test="type == '01'">
+				#{content}
+			</when>
+			<otherwise>
+				CASE WHEN TRIM(#{content}) = '' THEN (SELECT msg_ctt from licom_msg WHERE msg_id = 'M01' AND country_cd = #{countryCode}) ELSE #{content} END 
+			</otherwise>
+		</choose>
+		, #{groupUUID})
 	</insert>
 	
 	<select id="getMyQuestionList" parameterType="map" resultType="hashmap">
 		/* getMyQuestionList */
-		SELECT req_content content, DATE_FORMAT(req_dtm, '%Y-%m-%d') date, cntr_typ_cd type, 'N' answerYn
+		SELECT id, req_content content, DATE_FORMAT(req_dtm, '%Y-%m-%d') date, DATE_FORMAT(req_dtm, '%Y-%m-%d %H:%i:%s') time, cntr_typ_cd type,
+			 CASE WHEN res_content IS NOT NULL THEN 'Y' ELSE 'N' END answerYn
 		FROM app_svc_cntr
 		WHERE app_user_id = #{appUserId}
+		AND view_yn = 'Y'
 		<if test="time != ''">
 			AND req_dtm &lt; #{time}
 		</if>
-		ORDER by req_content DESC
+		ORDER by req_dtm DESC
 		LIMIT 20
+	</select>
+	
+	<select id="getAnswerById" parameterType="map" resultType="hashmap">
+		/* getAnswerById */
+		SELECT req_content quesContent, DATE_FORMAT(req_dtm, '%Y-%m-%d') quesDate, cntr_typ_cd type, 
+			uuid_arr groupUUID, res_content ansContent, DATE_FORMAT(res_dtm, '%Y-%m-%d') ansDate
+		FROM app_svc_cntr
+		WHERE id = #{id}
 	</select>
 </mapper>
