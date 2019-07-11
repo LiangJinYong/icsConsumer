@@ -37,7 +37,7 @@ public class FileUtil {
 		Map<String, Object> fileItemMap = null;
 		
 		Map<String, String> dirPathMap = new HashMap<>();
-		dirPathMap.put("codeId", "APP_UPLOAD");
+		dirPathMap.put("codeId", "APP_UPLOAD_DIR");
 		dirPathMap.put("codeValue", uploadImgType);
 		dirPathMap.put("countryCode", "KR");
 		

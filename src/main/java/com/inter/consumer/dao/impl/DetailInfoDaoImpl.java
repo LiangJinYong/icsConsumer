@@ -26,6 +26,11 @@ public class DetailInfoDaoImpl implements DetailInfoDao {
 	public Map<String, Object> getCurrentSeqInfo(Map<String, String> param) {
 		return sqlSessionTemplate.selectOne(NAMESPACE + "getCurrentSeqInfo", param);
 	}
+	
+	@Override
+	public String getMainLanguage(Map<String, String> param) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getMainLanguage", param);
+	}
 
 	@Override
 	public List<Map<String, Object>> getDetailInfo(Map<String, String> param) {

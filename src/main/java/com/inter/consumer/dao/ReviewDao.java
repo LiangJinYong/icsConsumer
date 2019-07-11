@@ -15,6 +15,9 @@ public interface ReviewDao {
 	
 	String getProdNameByOrderSeq(Map<String, String> param);
 
-	List<Map<String, Object>> getReviewList(Map<String, String> param);
+	List<Map<String, Object>> getReviewList(Map<String, Object> paramObj);
+
+	Integer getReviewTotalPageByOrder(Map<String, String> param);
+
 
 }

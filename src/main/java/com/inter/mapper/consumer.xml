@@ -34,28 +34,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN eff_sta_dt AND eff_end_dt
 	</select>
 
-	<!-- Register Question -->
-	<insert id="insertAppQuestion" parameterType="map">
-		/* insertAppQuestion */
-		INSERT INTO app_question (question_key, content, registration_time, app_user_id, country_cd) VALUES (null, #{content}, #{currentDatetime}, #{appUserId}, #{countryCode})
-	</insert>
-
-	<!-- Get Question List -->
-	<select id="queryAppUserCount" parameterType="string" resultType="int">
-		/* queryAppUserCount */
-		SELECT count(*) FROM app_user_token WHERE app_user_token = #{token}
-	</select>
-
-	<select id="queryQuestionAnswerList" parameterType="string" resultType="hashmap">
-		/* queryQuestionAnswerList */
-		SELECT q.question_key AS question_key, q.content AS content,
-		DATE_FORMAT(q.registration_time, '%Y-%m-%d %H:%i:%s') AS registration_time, a.answer_key, a.content AS a_content, DATE_FORMAT(a.registration_time, '%Y-%m-%d %H:%i:%s') AS a_registration_time,
-		a.question_key AS a_question_key
-		FROM app_question q LEFT JOIN app_answer a ON q.question_key = a.question_key
-		WHERE app_user_id = #{appUserId}
-		ORDER BY registration_time DESC
-	</select>
-
 	<!-- Detail Info -->
 	<select id="getUserAuthByToken" parameterType="string" resultType="string">
 		/* getUserAuthByToken */
@@ -86,9 +64,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		WHERE seq.sequence = #{sequence}
 	</select>
 	
+	<select id="getMainLanguage" parameterType="map" resultType="string">
+		/* getMainLanguage */
+		SELECT country_cd countryCode FROM lian_order_info WHERE ORDER_SEQ = #{orderSeq}
+	</select>
+	
 	<select id="getDetailInfo" parameterType="map" resultType="hashmap">
 		/* getDetailInfo */
-		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN, MAN_YN
+		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN, MAN_YN, USER_ICON_YN
 		FROM app_detail_info adi
 		WHERE order_seq = #{orderSeq}
 		AND country_cd = #{countryCode}
@@ -196,7 +179,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		AND    t2.display_yn          = 'Y'
 		AND    eu.enterprise_user_key = t1.enterprise_user_key
 		AND    eu.enterprise_key      = e.enterprise_key
-		ORDER BY t1.time desc
+		ORDER BY t1.time DESC
 	</select>
 
 	<!-- App Log -->
@@ -221,52 +204,52 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		/* insertFailLog */
 		INSERT INTO app_log_fail (
 		   NO
-		  ,AT_DATE
-		  ,RGST_YMD
-		  ,RGST_YY
-		  ,RGST_MM
-		  ,RGST_DD
-		  ,MANUFACTURE
-		  ,DEVICE
-		  ,OS_TYPE
-		  ,OS_VERSION
-		  ,APP_USER_ID
-		  ,SEQUENCE
-		  ,LONGITUDE
-		  ,LATITUDE
-		  ,ADDR_ALL
-		  ,ADDR_PROVINCE
-		  ,ADDR_CITY
-		  ,ADDR_DISTRICT
-		  ,COUNTRY_CD
-		  ,FAIL_RESN_CD
-		  ,LOCATION_CD
-		  ,GENDER
-		  ,BIRTH_DT
+		  , AT_DATE
+		  , RGST_YMD
+		  , RGST_YY
+		  , RGST_MM
+		  , RGST_DD
+		  , MANUFACTURE
+		  , DEVICE
+		  , OS_TYPE
+		  , OS_VERSION
+		  , APP_USER_ID
+		  , SEQUENCE
+		  , LONGITUDE
+		  , LATITUDE
+		  , ADDR_ALL
+		  , ADDR_PROVINCE
+		  , ADDR_CITY
+		  , ADDR_DISTRICT
+		  , COUNTRY_CD
+		  , FAIL_RESN_CD
+		  , LOCATION_CD
+		  , GENDER
+		  , BIRTH_DT
 		) VALUES (
 		   NULL
-		  ,#{currentDatetime}
-		  ,#{ymd}
-		  ,#{year}
-		  ,#{month}
-		  ,#{day}
-		  ,#{manufacture}
-		  ,#{device}
-		  ,#{osType}
-		  ,#{osVersion}
-		  ,#{appUserId}
-		  ,#{sequence}
-		  ,#{longitude}
-		  ,#{latitude}
-		  ,#{fullAddress}
-		  ,#{province}
-		  ,#{city}
-		  ,#{district}
-		  ,#{countryCode}
-		  ,#{failReasonCode}
-		  ,#{locationCd}
-		  ,#{gender}
-		  ,#{birthDt}
+		  , #{currentDatetime}
+		  , #{ymd}
+		  , #{year}
+		  , #{month}
+		  , #{day}
+		  , #{manufacture}
+		  , #{device}
+		  , #{osType}
+		  , #{osVersion}
+		  , #{appUserId}
+		  , #{sequence}
+		  , #{longitude}
+		  , #{latitude}
+		  , #{fullAddress}
+		  , #{province}
+		  , #{city}
+		  , #{district}
+		  , #{countryCode}
+		  , #{failReasonCode}
+		  , #{locationCd}
+		  , #{gender}
+		  , #{birthDt}
 		)
 	</insert>
 	
@@ -274,56 +257,56 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		/* insertSuccessLog */
 		INSERT INTO app_log_suc (
 		   NO
-		  ,AT_DATE
-		  ,RGST_YMD
-		  ,RGST_YY
-		  ,RGST_MM
-		  ,RGST_DD
-		  ,MANUFACTURE
-		  ,DEVICE
-		  ,OS_TYPE
-		  ,OS_VERSION
-		  ,APP_USER_ID
-		  ,ORDER_SEQ
-		  ,SEQUENCE
-		  ,LONGITUDE
-		  ,LATITUDE
-		  ,ADDR_ALL
-		  ,ADDR_PROVINCE
-		  ,ADDR_CITY
-		  ,ADDR_DISTRICT
-		  ,COUNTRY_CD
-		  ,PROD_TYP_CD
-		  ,LOCATION_CD
-		  ,GENDER
-		  ,BIRTH_DT
-		  ,WECHAT_ID
+		  , AT_DATE
+		  , RGST_YMD
+		  , RGST_YY
+		  , RGST_MM
+		  , RGST_DD
+		  , MANUFACTURE
+		  , DEVICE
+		  , OS_TYPE
+		  , OS_VERSION
+		  , APP_USER_ID
+		  , ORDER_SEQ
+		  , SEQUENCE
+		  , LONGITUDE
+		  , LATITUDE
+		  , ADDR_ALL
+		  , ADDR_PROVINCE
+		  , ADDR_CITY
+		  , ADDR_DISTRICT
+		  , COUNTRY_CD
+		  , PROD_TYP_CD
+		  , LOCATION_CD
+		  , GENDER
+		  , BIRTH_DT
+		  , WECHAT_ID
 		) VALUES (
 		   NULL
-		  ,#{currentDatetime}
-		  ,#{ymd}
-		  ,#{year}
-		  ,#{month}
-		  ,#{day}
-		  ,#{manufacture}
-		  ,#{device}
-		  ,#{osType}
-		  ,#{osVersion}
-		  ,#{appUserId}
-		  ,#{orderNum}
-		  ,#{sequence}
-		  ,#{longitude}
-		  ,#{latitude}
-		  ,#{fullAddress}
-		  ,#{province}  
-		  ,#{city}
-		  ,#{district}
-		  ,#{countryCode}
-		  ,#{prodTypeCd}
-		  ,#{locationCd}
-		  ,#{gender}
-		  ,#{birthDt}
-		  ,#{wechatId}
+		  , #{currentDatetime}
+		  , #{ymd}
+		  , #{year}
+		  , #{month}
+		  , #{day}
+		  , #{manufacture}
+		  , #{device}
+		  , #{osType}
+		  , #{osVersion}
+		  , #{appUserId}
+		  , #{orderNum}
+		  , #{sequence}
+		  , #{longitude}
+		  , #{latitude}
+		  , #{fullAddress}
+		  , #{province}  
+		  , #{city}
+		  , #{district}
+		  , #{countryCode}
+		  , #{prodTypeCd}
+		  , #{locationCd}
+		  , #{gender}
+		  , #{birthDt}
+		  , #{wechatId}
 		)
 	</insert>
 	
@@ -540,7 +523,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		UPDATE app_user
 		SET    gender   = IF(LENGTH(#{gender})  > 0, #{gender} , gender)
 		     , birth_dt = IF(LENGTH(#{birthDt}) > 0, #{birthDt}, birth_dt)
-		     , nick_nm = IF(LENGTH(#{nickName}) > 0, #{nickName}, nick_nm)
+		     , nick_nm = IF(LENGTH(#{nickName}) = 0, NULL, #{nickName})
 		     , audit_dtm = NOW()
 		WHERE  app_user_id = #{appUserId}
 	</update>
@@ -560,7 +543,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<insert id="insertImg" parameterType="map">
 		/* insertImg */
-		INSERT INTO lian_fileattach (GROUPUUID, FILEUUID, AUDIT_ID, AUDIT_DTM, SERVER_FILENAME, SERVER_FULLNAME, FILESIZE, FILENAME, FULL_FILENAME, STATUS, FILENAME_MAP)
+		INSERT INTO lian_fileattach (groupuuid, fileuuid, audit_id, audit_dtm, server_filename, server_fullname, filesize, filename, full_filename, status, filename_map)
 		VALUES
 		<foreach collection="imgInfoList" item="imgInfo" separator=",">
 			(
@@ -678,43 +661,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getSucDetectionList" parameterType="map" resultType="hashmap">
 		/* getSucDetectionList */
-		SELECT DATE_FORMAT(a.AT_DATE, '%Y-%m-%d %H:%i:%s') detectTime,
-		       a.sequence sequence,
-		       b.prod_nm prodNm,
-		       b.PROD_TYP_CD prodTypeCd,
-		       b.PROD_CL prodCl,
-		       (SELECT concat(
-		                  '/',
-		                  comm_cd_val_desc,
-		                  substring_index(
-		                     substring_index(fa.server_fullname,
-		                                     comm.comm_cd_val_nm,
-		                                     -1),
-		                     fa.filename_map,
-		                     1),
-		                  fa.server_filename)
-		                  bizLogoPath
-		        FROM lian_fileattach fa
-		        WHERE fa.groupuuid = b.biz_logo_uuid)
-		          AS bizLogoPath
-		FROM app_log_suc a,
-			 <if test="orderFlag != null">
-		     lian_order_info_cn
-		     </if>
-		     <if test="orderFlag == null">
-		     lian_order_info
-		     </if>
-		      b,
-		     (SELECT comm_cd_val_nm, comm_cd_val_desc
-		      FROM licom_comm_cd_dtl
-		      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
-		            AND comm_cd_val_desc = 'detail') AS comm
-		WHERE     b.order_seq = a.order_seq
-		      AND a.app_user_id = #{appUserId}
-		      AND a.rgst_ymd BETWEEN date_format(date_add(#{currentDate}, INTERVAL -1 MONTH), '%Y%m%d')
-		                         AND #{currentDate}
-		      AND a.country_cd = #{countryCode}
-		ORDER BY a.AT_DATE DESC
+		SELECT DATE_FORMAT(log.at_date, '%Y-%m-%d %H:%i:%s') detectTime
+				, log.sequence
+				, prodNm.detail_val prodNm
+				, loi.prod_typ_cd prodTypeCd
+				, prodCl.detail_val prodCl
+				, (SELECT CONCAT('/', comm_cd_val_desc,
+						SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1),
+						fa.server_filename)
+			        FROM lian_fileattach fa
+			        WHERE fa.groupuuid = loi.biz_logo_uuid) AS bizLogoPath
+		<include refid="detectTable" />
+		ORDER BY log.at_date DESC
 	</select>
 	
 	<select id="getFailDetectionList" parameterType="map" resultType="hashmap">
@@ -723,7 +681,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		FROM app_log_fail a
 		WHERE a.APP_USER_ID = #{appUserId}
 	      AND a.RGST_YMD BETWEEN date_format(date_add(#{currentDate}, INTERVAL -1 MONTH), '%Y%m%d') AND #{currentDate}
-	      AND a.COUNTRY_CD = #{countryCode}
      	ORDER BY a.AT_DATE DESC
 	</select>
 	
@@ -786,11 +743,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		INNER JOIN app_user au
 		ON apr.app_user_id = au.app_user_id
 		WHERE order_seq = #{orderSeq}
-		<if test="time != ''">
-			AND apr.audit_dtm &lt;= #{time}
+		<if test='sortType.equals("N")'>
+		    <if test='!time.equals("")'>
+		        AND apr.audit_dtm &lt;= #{time}
+		    </if>
 		</if>
-		ORDER BY apr.audit_dtm DESC
-		LIMIT 20
+		ORDER BY 
+		<if test='sortType.equals("S")'>
+		    apr.review_score DESC,
+		</if>
+		apr.audit_dtm DESC
+		LIMIT
+		<if test='sortType.equals("S")'>
+		    ${offset},
+		</if>
+		20
+	</select>
+	
+	<select id="getReviewTotalPageByOrder" parameterType="map" resultType="int">
+		/* getReviewTotalPageByOrder */
+		SELECT CASE WHEN COUNT(*) != 0 THEN (COUNT(*) - 1) DIV 20 + 1 ELSE 0 END reviewTotalPageNo
+		FROM app_prod_review
+		WHERE order_seq = #{orderSeq}
 	</select>
 	
 	<!-- Main Page Info -->
@@ -821,7 +795,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
             	AND comm_cd_val_desc = 'detail') AS comm
 		WHERE libi.biz_id = lbi.biz_id
-		AND libi.country_cd = #{countryCode}
 		AND libi.title = 'LOGO_UUID'
 		AND lbi.rel_ctrt_yn = 'Y'
 		ORDER BY RAND()
@@ -838,7 +811,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		/* getProdImgListByReview */
 		SELECT (SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) 
 		        FROM lian_fileattach fa
-		        WHERE fa.groupuuid = adi.detail_val)
+		        WHERE fa.groupuuid = loi.biz_logo_uuid)
 		          AS prodImgUrl, orderSeq.order_seq orderSeq
 		<include refid="reviewTable" />
 		ORDER BY orderSeq.cnt DESC
@@ -854,15 +827,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<sql id="reviewTable">
 		FROM (SELECT order_seq, COUNT(*) cnt FROM app_prod_review GROUP BY order_seq) orderSeq
-		INNER JOIN app_detail_info adi
-		ON adi.order_seq = orderSeq.order_seq
+		INNER JOIN lian_order_info loi
+        ON orderSeq.order_seq = loi.order_seq
 		, (SELECT comm_cd_val_nm, comm_cd_val_desc
 		      FROM licom_comm_cd_dtl
 		      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
-	            AND comm_cd_val_desc = 'detail') AS comm
-		WHERE adi.country_cd = #{countryCode}
-		AND detail_grp_cd = 'COM'
-		AND detail_typ_cd = 'M02'
+	            AND comm_cd_val_desc = 'detail') AS comm		
 	</sql>
 	
 	<select id="getDetectCount" parameterType="map" resultType="int">
@@ -873,7 +843,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getProdImgListByDetectRecord" parameterType="map" resultType="hashmap">
 		/* getProdImgListByDetectRecord */
-		SELECT (SELECT CONCAT('/' ,comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) FROM lian_fileattach fa WHERE fa.groupuuid = adi.detail_val) AS prodImgUrl
+		SELECT (SELECT CONCAT('/' ,comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) FROM lian_fileattach fa WHERE fa.groupuuid = loi.biz_logo_uuid) AS prodImgUrl
 			, log.sequence
 			, DATE_FORMAT(log.at_date, '%Y-%m-%d %H:%i:%s') time
 		<include refid="detectTable" />
@@ -885,22 +855,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	</select>
 	
 	<sql id="detectTable">
-		FROM app_log_suc log INNER JOIN app_seq seq
-		ON log.sequence = seq.sequence
-		INNER JOIN app_detail_info adi
-		ON adi.order_seq = seq.order_seq,
-		(SELECT comm_cd_val_nm, comm_cd_val_desc
+		FROM app_log_suc log
+		INNER JOIN (SELECT detail_val, order_seq FROM app_detail_info adi WHERE country_cd = #{countryCode} AND detail_typ_cd = 'M08') prodCl
+		ON log.order_seq = prodCl.order_seq
+		INNER JOIN (SELECT detail_val, order_seq FROM app_detail_info adi WHERE country_cd = #{countryCode} AND detail_typ_cd = 'M01') prodNm
+		ON log.order_seq = prodNm.order_seq
+		INNER JOIN lian_order_info loi
+		ON loi.order_seq = log.order_seq
+		, (SELECT comm_cd_val_nm, comm_cd_val_desc
 				      FROM licom_comm_cd_dtl
 				      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
 				            AND comm_cd_val_desc = 'detail') AS comm
-		WHERE adi.country_cd = #{countryCode}
-		AND log.COUNTRY_CD = #{countryCode}
-		AND log.APP_USER_ID = #{appUserId}
-		AND adi.detail_grp_cd = 'COM'
-		AND adi.detail_typ_cd = 'M02'
-		AND adi.dsp_yn = 'Y'
-		AND log.RGST_YMD BETWEEN DATE_FORMAT(DATE_ADD(#{currentDate}, INTERVAL -1 MONTH), '%Y%m%d') and #{currentDate}
+		WHERE log.app_user_id = #{appUserId}
+		AND log.rgst_ymd BETWEEN DATE_FORMAT(DATE_ADD(#{currentDate}, INTERVAL -1 MONTH), '%Y%m%d') AND #{currentDate}
 	</sql>
+	
+	<select id="getNoticeTotalPage" parameterType="map" resultType="int">
+		/* getNoticeTotalPage */
+		SELECT CASE WHEN COUNT(*) != 0 THEN (COUNT(*) - 1) DIV 20 + 1 ELSE 0 END noticeTotalPageNo
+		FROM app_ntc
+		WHERE ntc_grp_cd = #{type}
+	</select>
 	
 	<select id="getNoticeList" parameterType="map" resultType="hashmap">
 		/* getNoticeList */
@@ -920,11 +895,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			AND dtl.comm_cd_id = 'NTC_TYP_CD'
 			AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
 		</if>
-		<if test="time != ''">
-			AND ntc.audit_dtm &lt; #{time}
-		</if>
 		ORDER BY ntc.audit_dtm DESC
-		LIMIT 20
+		<choose>
+			<when test="currentPageNo == null">
+				LIMIT 20
+			</when>
+			<otherwise>
+				LIMIT #{offset}, 20
+			</otherwise>
+		</choose>
 	</select>
 	
 	<!-- Service Center -->
@@ -953,7 +932,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		AND view_yn = 'Y'
 		<if test="time != ''">
 			AND req_dtm &lt; #{time}
-		</if>
+		</if>	
 		ORDER by req_dtm DESC
 		LIMIT 20
 	</select>

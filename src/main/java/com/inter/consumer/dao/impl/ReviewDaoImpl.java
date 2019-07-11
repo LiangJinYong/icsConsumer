@@ -43,8 +43,13 @@ public class ReviewDaoImpl implements ReviewDao {
 	}
 
 	@Override
-	public List<Map<String, Object>> getReviewList(Map<String, String> param) {
-		return sqlSessionTemplate.selectList(NAMESPACE + "getReviewList", param);
+	public List<Map<String, Object>> getReviewList(Map<String, Object> paramObj) {
+		return sqlSessionTemplate.selectList(NAMESPACE + "getReviewList", paramObj);
+	}
+
+	@Override
+	public Integer getReviewTotalPageByOrder(Map<String, String> param) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getReviewTotalPageByOrder", param);
 	}
 
 }

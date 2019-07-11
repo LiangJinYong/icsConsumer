@@ -161,6 +161,7 @@ public class VerificationHistoryServiceImpl implements VerificationHistoryServic
 			}
 		} else {
 			param.put("failReasonCode", "F01");
+			param.put("sequence", "0");
 			verificationHistoryDao.insertFailLog(param);
 			
 			result.put("logType", "timeout");

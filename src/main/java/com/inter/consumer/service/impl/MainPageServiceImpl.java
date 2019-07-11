@@ -135,7 +135,22 @@ public class MainPageServiceImpl implements MainPageService {
 		Map<String, Object> result = new HashMap<String, Object>();
 		Gson gson = new Gson();
 		
-		List<Map<String, Object>> noticeList = mainPageDao.getNoticeList(param);
+		Map<String, Object> paramObj = new HashMap<>();
+		paramObj.putAll(param);
+		
+		String currentPageNo = param.get("currentPageNo");
+		
+		if (currentPageNo != null) {
+			Integer currentPageNoInt =  Integer.parseInt(param.get("currentPageNo"));
+			if (currentPageNoInt != null) {
+				paramObj.put("offset", (currentPageNoInt - 1) * 20);
+			}
+		}
+		
+		Integer noticeTotalPageNo = mainPageDao.getNoticeTotalPage(paramObj);
+		result.put("noticeTotalPageNo", noticeTotalPageNo);
+		
+		List<Map<String, Object>> noticeList = mainPageDao.getNoticeList(paramObj);
 		
 		for(Map<String, Object> notice : noticeList) {
 			String groupUUID = (String) notice.get("groupUUID");

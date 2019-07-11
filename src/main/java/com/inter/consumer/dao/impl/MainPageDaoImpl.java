@@ -58,8 +58,13 @@ public class MainPageDaoImpl implements MainPageDao {
 	}
 
 	@Override
-	public List<Map<String, Object>> getNoticeList(Map<String, String> param) {
-		return sqlSessionTemplate.selectList(NAMESPACE + "getNoticeList", param);
+	public List<Map<String, Object>> getNoticeList(Map<String, Object> paramObj) {
+		return sqlSessionTemplate.selectList(NAMESPACE + "getNoticeList", paramObj);
+	}
+
+	@Override
+	public Integer getNoticeTotalPage(Map<String, Object> paramObj) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getNoticeTotalPage", paramObj);
 	}
 
 }

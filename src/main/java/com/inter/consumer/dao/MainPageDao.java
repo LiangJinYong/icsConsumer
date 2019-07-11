@@ -21,6 +21,8 @@ public interface MainPageDao {
 
 	List<Map<String, Object>> getReviewProdImgListPaging(Map<String, String> param);
 
-	List<Map<String, Object>> getNoticeList(Map<String, String> param);
+	List<Map<String, Object>> getNoticeList(Map<String, Object> paramObj);
+
+	Integer getNoticeTotalPage(Map<String, Object> paramObj);
 
 }

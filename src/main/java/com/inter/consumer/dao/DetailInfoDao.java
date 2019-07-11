@@ -9,6 +9,8 @@ public interface DetailInfoDao {
 
 	Map<String, Object> getCurrentSeqInfo(Map<String, String> param);
 
+	String getMainLanguage(Map<String, String> param);
+	
 	List<Map<String, Object>> getDetailInfo(Map<String, String> param);
 
 	Map<String, Object> getReviewInfo(Map<String, String> param);

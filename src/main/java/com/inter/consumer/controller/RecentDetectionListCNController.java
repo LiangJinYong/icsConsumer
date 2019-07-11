@@ -23,17 +23,9 @@ public class RecentDetectionListCNController {
 	@ResponseBody
 	public String recentDetectionList(HttpServletRequest request) {
 		Map<String, String[]> paramMap = request.getParameterMap();
-
 		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
 
-		String requestURL = request.getRequestURL().toString();
-		
-		int serverPort = request.getServerPort();
-
-		param.put("port", String.valueOf(serverPort));
-		String[] split = requestURL.split(String.valueOf(serverPort));
-
-		param.put("urlHeader", split[0] + serverPort);
+		RequestParamUtil.putUrlHeader(request, param);
 		
 		String result = recentDetectionListCNService.recentDetectionListCN(param);
 		return result;

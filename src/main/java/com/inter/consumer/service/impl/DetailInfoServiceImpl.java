@@ -1,6 +1,7 @@
 package com.inter.consumer.service.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +28,8 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 	
 	@Autowired
 	private CommonCodeUtil commonCodeUtil;
+	
+	private static final String[] SUPPORTED_LANGS = {"KR", "CN", "US", "VN"};
 	
 	public String detailInfo(Map<String, String> param) {
 
@@ -62,7 +65,29 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 			List<Map<String, Object>> defList = new ArrayList<>();
 			List<Map<String, Object>> manList = new ArrayList<>();
 			
+			String countryCode = param.get("countryCode");
+			
+			boolean contains = Arrays.asList(SUPPORTED_LANGS).contains(countryCode);
+			
+			if (!contains) {
+				param.put("countryCode", "US");
+			}
+			
 			List<Map<String, Object>> detailInfo = detailInfoDao.getDetailInfo(param);
+			
+			if (detailInfo == null || detailInfo.size() == 0) {
+				
+				String mainLanguage = detailInfoDao.getMainLanguage(param);
+				param.put("countryCode", mainLanguage);
+				
+				detailInfo = detailInfoDao.getDetailInfo(param);
+				
+				if (detailInfo == null || detailInfo.size() == 0) {
+					result.put("resultCode", 405);
+					messageUtil.addResultMsg(param, result);
+					return  gson.toJson(result);
+				}
+			}
 			
 			Map<String, Object> reviewInfo = detailInfoDao.getReviewInfo(param);
 			
@@ -161,7 +186,7 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 			Map<String, Object> detailContent = detailInfoDao.getDetailContent(param);
 			
 			if (detailContent != null) {
-				for(int i=1; i<5; i++) {
+				for(int i=1; i<=5; i++) {
 					String content = (String) detailContent.get("detail_ctt" + i);
 					
 					if (content != null) {
@@ -194,8 +219,13 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 
 	private String getImgPath(String urlHeader, String groupUUID) {
 		
-		String serverPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
+		List<String> imgList = detailInfoDao.getImgPathByGroupUUID(groupUUID);
 		
-		return urlHeader + serverPath;
+		if (imgList.size() > 0) {
+			String serverPath = imgList.get(0);
+			return urlHeader + serverPath;
+		} else {
+			return "";
+		}
 	}
 }

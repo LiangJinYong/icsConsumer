@@ -79,15 +79,31 @@ public class ReviewServiceImpl implements ReviewService {
 		Map<String, Object> reviewInfo = detailInfoDao.getReviewInfo(param);
 		result.putAll(reviewInfo);
 		
-		List<Map<String, Object>> reviewList = reviewDao.getReviewList(param);
+		Map<String, Object> paramObj = new HashMap<>();
+		paramObj.putAll(param);
+		
+		String sortType = param.get("sortType");
+		
+		if("S".equals(sortType)) {
+			Integer currentPageNo = Integer.parseInt(param.get("currentPageNo"));
+			
+			if (currentPageNo != null) {
+				paramObj.put("offset", (currentPageNo - 1) * 20);
+			}
+			
+			Integer reviewTotalPageNo = reviewDao.getReviewTotalPageByOrder(param);
+			result.put("reviewTotalPageNo", reviewTotalPageNo);
+		}
+		
+		List<Map<String, Object>> reviewList = reviewDao.getReviewList(paramObj);
 		
 		// substitute from groupUUID to URL for profile image
 		for(Map<String, Object> review : reviewList) {
-			String groupUUID = (String) review.get("profileURL");
+			String groupUUID = (String) review.get("profileUrl");
 			
 			if (groupUUID != null) {
 				String imgPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
-				review.put("profileURL", param.get("urlHeader") + imgPath);
+				review.put("profileUrl", param.get("urlHeader") + imgPath);
 			}
 		}
 		

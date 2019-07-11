@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
 import com.inter.consumer.dao.DetailInfoDao;
+import com.inter.consumer.dao.MessageDao;
 import com.inter.consumer.service.DetailInfoCNService;
 import com.inter.util.ResultMessageUtil;
 
@@ -21,6 +22,9 @@ public class DetailInfoCNServiceImpl implements DetailInfoCNService {
 	
 	@Autowired
 	private ResultMessageUtil messageUtil;
+	
+	@Autowired
+	private MessageDao messageDao;
 
 	@Override
 	public String detailInfoCN(Map<String, String> param) {
@@ -45,20 +49,35 @@ public class DetailInfoCNServiceImpl implements DetailInfoCNService {
 			
 			List<Map<String, Object>> iconColorInfo = detailInfoDao.getIconColorInfo(param);
 			
+			if (iconColorInfo == null || iconColorInfo.size() == 0) {
+				String mainLanguage = detailInfoDao.getMainLanguage(param);
+				param.put("countryCode", mainLanguage);
+				
+				iconColorInfo = detailInfoDao.getIconColorInfo(param);
+			}
+			
 			for(Map<String, Object> iconColor : iconColorInfo) {
 				if ("MATR".equals(iconColor.get("iconName"))) {
 					String groupUUID = (String) iconColor.get("value");
 					
 					if (groupUUID != null) {
-						String imgPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
-						result.put("rawMaterialPath", param.get("urlHeader") + imgPath);
+						List<String> imgList = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+						
+						if (imgList.size() > 0) {
+							String imgPath = imgList.get(0);
+							result.put("rawMaterialPath", param.get("urlHeader") + imgPath);
+						}
 					}
 				} else if ("NUTR".equals(iconColor.get("iconName"))) {
 					String groupUUID = (String) iconColor.get("value");
 					
 					if (groupUUID != null) {
-						String imgPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
-						result.put("foodNutritionPath", param.get("urlHeader") + imgPath);
+						List<String> imgList = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+						
+						if (imgList.size() > 0) {
+							String imgPath = imgList.get(0);
+							result.put("foodNutritionPath", param.get("urlHeader") + imgPath);
+						}
 					}
 				} else if ("COLOR_VAL".equals(iconColor.get("title"))) {
 					result.put("paramColor", iconColor.get("value"));
@@ -67,8 +86,12 @@ public class DetailInfoCNServiceImpl implements DetailInfoCNService {
 					String groupUUID = (String) iconColor.get("value");
 					
 					if (groupUUID != null) {
-						String imgPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
-						result.put("bizLogoPath", param.get("urlHeader") + imgPath);
+						List<String> imgList = detailInfoDao.getImgPathByGroupUUID(groupUUID);
+						
+						if (imgList.size() > 0) {
+							String imgPath = imgList.get(0);
+							result.put("bizLogoPath", param.get("urlHeader") + imgPath);
+						}
 					}
 				}
 			}
@@ -102,11 +125,16 @@ public class DetailInfoCNServiceImpl implements DetailInfoCNService {
 					if (prodExpDt != null) {
 						detailItem.put("content", prodExpDt);
 						Map<String, Object> remainDt = new HashMap<>();
-						remainDt.put("title", "保质期剩余时间");
+						
+						param.put("resultCode", "M02");
+						String prodRemainDays = messageDao.getResultMessage(param);
+						remainDt.put("title", prodRemainDays);// "保质期剩余时间"
 						long remainDays = (long) currentSeqInfoCN.get("REMAIN_DT");
 						
 						if (remainDays <= 0) {
-							remainDt.put("content", "已过保质期");
+							param.put("resultCode", "M03");
+							String expired = messageDao.getResultMessage(param);
+							remainDt.put("content", expired); //"已过保质期"
 						} else {
 							remainDt.put("content", currentSeqInfoCN.get("REMAIN_DT"));
 						}
