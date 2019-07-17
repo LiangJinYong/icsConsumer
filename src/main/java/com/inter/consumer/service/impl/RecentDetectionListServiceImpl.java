@@ -1,5 +1,6 @@
 package com.inter.consumer.service.impl;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ public class RecentDetectionListServiceImpl implements RecentDetectionListServic
 
 	@Autowired
 	private ResultMessageUtil messageUtil;
+	
+	private static final String[] SUPPORTED_LANGS = {"KR", "CN", "US", "VN"};
 
 	public String recentDetectionList(Map<String, String> param) {
 		Map<String, Object> result = new HashMap<String, Object>();
@@ -33,6 +36,13 @@ public class RecentDetectionListServiceImpl implements RecentDetectionListServic
 			messageUtil.addResultMsg(param, result);
 
 			return gson.toJson(result);
+		}
+		
+		String countryCode = param.get("countryCode");
+		boolean contains = Arrays.asList(SUPPORTED_LANGS).contains(countryCode);
+		
+		if (!contains) {
+			param.put("countryCode", "US");
 		}
 
 		// get succss list

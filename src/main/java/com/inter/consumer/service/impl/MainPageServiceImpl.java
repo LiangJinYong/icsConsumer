@@ -1,6 +1,7 @@
 package com.inter.consumer.service.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,8 @@ public class MainPageServiceImpl implements MainPageService {
 
 	@Autowired
 	private ResultMessageUtil messageUtil;
+	
+	private static final String[] SUPPORTED_LANGS = {"KR", "CN", "US", "VN"};
 	
 	@Override
 	public String getMainPageInfo(Map<String, String> param) {
@@ -62,6 +65,13 @@ public class MainPageServiceImpl implements MainPageService {
 		if (appUserId != null) {
 			
 			param.put("appUserId", String.valueOf(appUserId));
+			
+			String countryCode = param.get("countryCode");
+			boolean contains = Arrays.asList(SUPPORTED_LANGS).contains(countryCode);
+			
+			if (!contains) {
+				param.put("countryCode", "US");
+			}
 			
 			Integer detectCount = mainPageDao.getDetectCount(param);
 			result.put("detectCount", detectCount);

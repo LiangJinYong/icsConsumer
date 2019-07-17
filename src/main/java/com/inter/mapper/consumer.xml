@@ -773,8 +773,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		SELECT ntc_title title, dtl.comm_cd_val_nm category, DATE_FORMAT(rgst_dt, '%Y-%m-%d') date 
 		FROM app_ntc ntc
 		INNER JOIN licom_comm_cd_dtl dtl on ntc.ntc_typ_cd = dtl.comm_cd_val
-		WHERE ntc.country_cd = #{countryCode}
-		AND dtl.country_cd = #{countryCode}
+		WHERE ntc.country_cd = (CASE WHEN #{countryCode} = 'KR' THEN 'KR' ELSE 'US' END)
+		AND dtl.country_cd = (CASE WHEN #{countryCode} = 'KR' THEN 'KR' ELSE 'US' END)
 		AND ntc.ntc_grp_cd = '01'
 		AND dtl.comm_cd_id = 'NTC_TYP_CD'
 		AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
@@ -887,11 +887,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<if test="type == '01'">
 			INNER JOIN licom_comm_cd_dtl dtl on ntc.ntc_typ_cd = dtl.comm_cd_val
 		</if>
-		WHERE ntc.country_cd = #{countryCode}
+		WHERE ntc.country_cd = (CASE WHEN #{countryCode} = 'KR' THEN 'KR' ELSE 'US' END)
 		AND ntc.ntc_grp_cd = #{type}
 		AND view_yn = 'Y'
 		<if test="type == '01'">
-			AND dtl.country_cd = #{countryCode}
+			AND dtl.country_cd = (CASE WHEN #{countryCode} = 'KR' THEN 'KR' ELSE 'US' END)
 			AND dtl.comm_cd_id = 'NTC_TYP_CD'
 			AND DATE_FORMAT(CURDATE(), '%Y%m%d') BETWEEN dtl.eff_sta_dt AND dtl.eff_end_dt
 		</if>
