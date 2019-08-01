@@ -34,6 +34,18 @@ public class MainPageController {
 		return result;
 	}
 	
+	@RequestMapping("/getProdsByCorp")
+	@ResponseBody
+	public String getProdsByCorp(HttpServletRequest request) {
+		Map<String, String[]> paramMap = request.getParameterMap();
+		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
+		
+		RequestParamUtil.putUrlHeader(request, param);
+		
+		String result = mainPageService.getProdsByCorp(param);
+		return result;
+	}
+	
 	@RequestMapping("/getProdImgsByReview")
 	@ResponseBody
 	public String getProdImgsByReview(HttpServletRequest request) {

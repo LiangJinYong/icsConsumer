@@ -26,6 +26,21 @@ public class MainPageDaoImpl implements MainPageDao {
 	public List<Map<String, Object>> getRandomCorpImgList(Map<String, String> param) {
 		return sqlSessionTemplate.selectList(NAMESPACE + "getRandomCorpImgList", param);
 	}
+	
+	@Override
+	public String getCorpNm(Map<String, Object> paramObj) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getCorpNm", paramObj);
+	}
+
+	@Override
+	public List<Map<String, Object>> getProdListByCorp(Map<String, Object> paramObj) {
+		return sqlSessionTemplate.selectList(NAMESPACE + "getProdListByCorp", paramObj);
+	}
+
+	@Override
+	public int getProdTotalPageNo(Map<String, Object> paramObj) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getProdTotalPageNo", paramObj);
+	}
 
 	@Override
 	public Integer getReviewTotalPageNo(Map<String, String> param) {

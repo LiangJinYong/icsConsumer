@@ -37,4 +37,23 @@ public class DetailInfoController {
 		
 		return result;
 	}
+	
+	@RequestMapping("/detailInfoByOrder")
+	@ResponseBody
+	public String detailInfoByOrder(HttpServletRequest request) {
+		
+		Map<String, String[]> paramMap = request.getParameterMap();
+		Map<String, String> param = RequestParamUtil.getParamMap(paramMap);
+		
+		RequestParamUtil.putUrlHeader(request, param);
+
+		String token = request.getHeader("token");
+		if (token != null) {
+			param.put("token", token);
+		}
+		
+		String result = detailInfoService.detailInfoByOrder(param);
+		
+		return result;
+	}
 }

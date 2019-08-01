@@ -71,7 +71,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getDetailInfo" parameterType="map" resultType="hashmap">
 		/* getDetailInfo */
-		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN, MAN_YN, USER_ICON_YN
+		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN, MAN_YN, USER_ICON_YN, SOUND_UUID, REV_REST_YN
 		FROM app_detail_info adi
 		WHERE order_seq = #{orderSeq}
 		AND country_cd = #{countryCode}
@@ -80,11 +80,32 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		ORDER BY auth_cd DESC, sort_no ASC 
 	</select>
 	
+	<select id="getDetailInfoByOrder" parameterType="map" resultType="hashmap">
+		/* getDetailInfoByOrder */
+		SELECT DETAIL_GRP_CD, DETAIL_TYP_CD, DETAIL_TITLE, DETAIL_VAL, ICON_NM, DSP_MV_YN, MAN_YN, USER_ICON_YN, SOUND_UUID, REV_REST_YN
+		FROM app_detail_info adi
+		WHERE order_seq = #{orderSeq}
+		AND country_cd = #{countryCode}
+		AND auth_cd >= #{auth}
+		AND dsp_yn = 'Y'
+		AND detail_typ_cd NOT IN ('N99', 'N06', 'M05', 'M06', 'M07')
+		ORDER BY auth_cd DESC, sort_no ASC 
+	</select>
+	
 	<select id="getReviewInfo" parameterType="map" resultType="hashmap">
 		/* getReviewInfo */
 		SELECT COUNT(*) REVIEW_CNT, FORMAT(AVG(review_score), 1) REVIEW_SCORE
 		FROM app_prod_review
 		WHERE order_seq = #{orderSeq}
+	</select>
+	
+	<select id="getReviewRegistableYn" parameterType="map" resultType="string">
+		/* getReviewRegistableYn */
+		SELECT CASE WHEN COUNT(*) > 0 THEN 'N' ELSE 'Y' END reviewRegistableYn
+		FROM app_prod_review
+		WHERE order_seq = #{orderSeq}
+		AND country_cd = #{countryCode}
+		AND app_user_id = #{appUserId}
 	</select>
 	
 	<select id="getImgPathByGroupUUID" parameterType="string" resultType="string">
@@ -711,9 +732,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<insert id="insertProdReview" parameterType="map">
 		/* insertProdReview */
 		INSERT INTO app_prod_review
-		(id, order_seq, app_user_id, review_content, review_score, rgst_dt)
+		(id, order_seq, app_user_id, country_cd, location_cd, review_content, review_score, rgst_dt)
 		VALUES
-		(null, #{orderSeq}, #{appUserId}, TRIM(#{content}), #{score}, DATE_FORMAT(NOW(), '%Y%m%d'))
+		(null, #{orderSeq}, #{appUserId}, #{countryCode}, #{locationCd}, TRIM(#{content}), #{score}, DATE_FORMAT(NOW(), '%Y%m%d'))
 	</insert>
 	
 	<select id="getBizNameByOrderSeq" parameterType="map" resultType="string">
@@ -738,7 +759,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<select id="getReviewList" parameterType="map" resultType="hashmap">
 		/* getReviewList */
-		SELECT au.groupuuid profileUrl, apr.id reviewId, apr.review_score score, IFNULL(au.nick_nm, CONCAT(LEFT(au.login_id, 4), '*****')) nickName, DATE_FORMAT(apr.rgst_dt, '%y.%m.%d') date, apr.review_content content, DATE_FORMAT(apr.audit_dtm, '%Y-%m-%d %H:%i:%s') time
+		SELECT au.groupuuid profileUrl, apr.id reviewId, apr.review_score score, IFNULL(au.nick_nm, CONCAT(LEFT(au.login_id, 4), '*****')) nickName, DATE_FORMAT(apr.rgst_dt, '%y.%m.%d') date, apr.review_content content, DATE_FORMAT(apr.audit_dtm, '%Y-%m-%d %H:%i:%s') time, apr.location_cd locationCd
 		FROM app_prod_review apr 
 		INNER JOIN app_user au
 		ON apr.app_user_id = au.app_user_id
@@ -787,7 +808,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		/* getRandomCorpImgList */
 		SELECT (SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename)
 				FROM lian_fileattach fa
-		        WHERE fa.groupuuid = libi.value) AS corpImgUrl 
+		        WHERE fa.groupuuid = libi.value) AS corpImgUrl, lbi.biz_id corpId
 		FROM lian_intl_biz_info libi,
 		lian_biz_info lbi,
 			(SELECT comm_cd_val_nm, comm_cd_val_desc
@@ -800,6 +821,52 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		ORDER BY RAND()
 		LIMIT 20
 	</select>
+	
+	<select id="getCorpNm" parameterType="map" resultType="string">
+		/* getCorpNm */
+		SELECT libi.value
+		FROM lian_intl_biz_info libi
+		WHERE country_cd = #{countryCode} 
+		AND biz_id = #{corpId} 
+		AND title = 'BIZ_NAME'
+	</select>
+	
+	<select id="getProdListByCorp" parameterType="map" resultType="hashmap">
+		/* getProdListByCorp */
+		SELECT adi.order_seq orderSeq, adi.detail_val prodNm,
+			(SELECT CONCAT('/', comm_cd_val_desc, SUBSTRING_INDEX(SUBSTRING_INDEX(fa.server_fullname, comm.comm_cd_val_nm, -1), fa.filename_map, 1), fa.server_filename) 
+	        FROM lian_fileattach fa
+	        WHERE fa.groupuuid = loi.biz_logo_uuid) prodImgUrl
+		<include refid="corpProdTable" />
+		ORDER BY adi.order_seq
+		<choose>
+			<when test="currentPageNo == null">
+				LIMIT 20
+			</when>
+			<otherwise>
+				LIMIT #{offset}, 20
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getProdTotalPageNo" parameterType="map" resultType="int">
+		/* getProdTotalPageNo */
+		SELECT (COUNT(*) DIV 20) + 1
+		<include refid="corpProdTable" />
+	</select>
+	
+	<sql id="corpProdTable">
+		FROM lian_order_info loi
+		INNER JOIN app_detail_info adi
+		ON loi.order_seq = adi.order_seq
+		, (SELECT comm_cd_val_nm, comm_cd_val_desc
+		      FROM licom_comm_cd_dtl
+		      WHERE     comm_cd_id = 'FTP_SERVER_DIR'
+	            AND comm_cd_val_desc = 'detail') AS comm
+		WHERE detail_typ_cd = 'M01'
+		AND loi.BIZ_ID = #{corpId}
+		AND adi.country_cd = #{countryCode}
+	</sql>
 	
 	<select id="getReviewTotalPageNo" parameterType="map" resultType="int">
 		/* getReviewTotalPageNo */

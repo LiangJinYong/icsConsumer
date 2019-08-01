@@ -48,6 +48,8 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 		
 		param.put("auth", auth);
 		
+		String countryCode = param.get("countryCode");
+		
 		Map<String, Object> currentSeqInfo = detailInfoDao.getCurrentSeqInfo(param);
 		
 		if (currentSeqInfo == null) {
@@ -64,8 +66,6 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 			List<Map<String, Object>> topList = new ArrayList<>();
 			List<Map<String, Object>> defList = new ArrayList<>();
 			List<Map<String, Object>> manList = new ArrayList<>();
-			
-			String countryCode = param.get("countryCode");
 			
 			boolean contains = Arrays.asList(SUPPORTED_LANGS).contains(countryCode);
 			
@@ -118,6 +118,14 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 					}
 				}
 				
+				String soundUUID = (String) detailItem.get("SOUND_UUID");
+				
+				if (soundUUID != null && !"".equals(soundUUID)) {
+					String soundURL = getImgPath(urlHeader, soundUUID);
+					detailItem.put("SOUND_URL", soundURL);
+					detailItem.remove("SOUND_UUID");
+				}
+				
 				if ("M00".equals(typeCode)) {
 					result.put("colorCode", detailVal);
 				} else if ("M01".equals(typeCode)) {
@@ -126,11 +134,30 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 					String prodImgPath = getImgPath(urlHeader, detailVal);
 					result.put("prodImgPath", prodImgPath);
 				} else if ("M03".equals(typeCode)) {
-					result.put("reviewCount", reviewInfo.get("REVIEW_CNT"));
-				} else if ("M04".equals(typeCode)) {
 					String reviewScore = (String) reviewInfo.get("REVIEW_SCORE");
 					if (reviewScore != null) {
 						result.put("reviewScore", reviewScore);
+					}
+				} else if ("M04".equals(typeCode)) {
+					result.put("reviewCount", reviewInfo.get("REVIEW_CNT"));
+					
+					String reviewRestrictYn = (String) detailItem.get("REV_REST_YN");
+					
+					Integer appUserId = detailInfoDao.getUserIdByToken(token);
+						
+					if (appUserId != null) {
+						if ("Y".equals(reviewRestrictYn)) {
+							Map<String, Object> reviewRestrictMap = new HashMap<>();
+							reviewRestrictMap.put("orderSeq", orderSeq);
+							reviewRestrictMap.put("countryCode", countryCode);
+							reviewRestrictMap.put("appUserId", appUserId);
+							
+							String reviewRegistableYn = detailInfoDao.getReviewRegistableYn(reviewRestrictMap);
+							
+							result.put("reviewRegistableYn", reviewRegistableYn);
+						} else {
+							result.put("reviewRegistableYn", "Y");
+						}
 					}
 				} else if ("M05".equals(typeCode)) {
 					blockChainYn = detailVal;
@@ -211,7 +238,6 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 		}
 		
 		result.put("resultCode", 200);
-		
 		messageUtil.addResultMsg(param, result);
 
 		return gson.toJson(result);
@@ -227,5 +253,129 @@ public class DetailInfoServiceImpl implements DetailInfoService {
 		} else {
 			return "";
 		}
+	}
+
+	@Override
+	public String detailInfoByOrder(Map<String, String> param) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		Gson gson = new Gson();
+
+		String token = param.get("token");
+		
+		String auth = "AU06";
+		if (token != null) {
+			auth = detailInfoDao.getUserAuthByToken(token);
+ 			if (auth == null) {
+				auth = "AU06";
+			}
+		}
+		
+		param.put("auth", auth);
+		
+		Map<String, Object> data = new HashMap<>();
+		
+		List<Map<String, Object>> topList = new ArrayList<>();
+		List<Map<String, Object>> defList = new ArrayList<>();
+		List<Map<String, Object>> manList = new ArrayList<>();
+		
+		String countryCode = param.get("countryCode");
+		boolean contains = Arrays.asList(SUPPORTED_LANGS).contains(countryCode);
+		
+		if (!contains) {
+			param.put("countryCode", "US");
+		}
+		
+		List<Map<String, Object>> detailInfo = detailInfoDao.getDetailInfoByOrder(param);
+		
+		if (detailInfo == null || detailInfo.size() == 0) {
+			
+			String mainLanguage = detailInfoDao.getMainLanguage(param);
+			param.put("countryCode", mainLanguage);
+			
+			detailInfo = detailInfoDao.getDetailInfo(param);
+			
+			if (detailInfo == null || detailInfo.size() == 0) {
+				result.put("resultCode", 405);
+				messageUtil.addResultMsg(param, result);
+				return  gson.toJson(result);
+			}
+		}
+		
+		Map<String, Object> reviewInfo = detailInfoDao.getReviewInfo(param);
+		
+		Iterator<Map<String, Object>> iterator = detailInfo.iterator();
+		
+		String urlHeader = param.get("urlHeader");
+		
+		while (iterator.hasNext()) {
+			Map<String, Object> detailItem = iterator.next();
+			
+			String typeCode = (String) detailItem.get("DETAIL_TYP_CD");
+			
+			String detailVal = (String) detailItem.get("DETAIL_VAL");
+			
+			String soundUUID = (String) detailItem.get("SOUND_UUID");
+			
+			if (soundUUID != null && !"".equals(soundUUID)) {
+				String soundURL = getImgPath(urlHeader, soundUUID);
+				detailItem.put("SOUND_URL", soundURL);
+				detailItem.remove("SOUND_UUID");
+			}
+			
+			if ("M00".equals(typeCode)) {
+				result.put("colorCode", detailVal);
+			} else if ("M01".equals(typeCode)) {
+				result.put("productName", detailVal);
+			} else if ("M02".equals(typeCode)) {
+				String prodImgPath = getImgPath(urlHeader, detailVal);
+				result.put("prodImgPath", prodImgPath);
+			} else if ("M03".equals(typeCode)) {
+				String reviewScore = (String) reviewInfo.get("REVIEW_SCORE");
+				if (reviewScore != null) {
+					result.put("reviewScore", reviewScore);
+				}
+			} else if ("M04".equals(typeCode)) {
+				result.put("reviewCount", reviewInfo.get("REVIEW_CNT"));
+			}
+			
+			String groupCode = (String) detailItem.get("DETAIL_GRP_CD");
+			
+			detailItem.remove("DETAIL_GRP_CD");
+			
+			if ("TOP".equals(groupCode)) {
+				
+				if ("N03".equals(typeCode)) {
+					String imgPath = getImgPath(urlHeader, detailVal);
+					detailItem.put("DETAIL_VAL", imgPath);
+				}
+				
+				param.put("codeId", "APP_ICON_FILE_DIR");
+				param.put("codeValue", (String) detailItem.get("ICON_NM"));
+
+				String iconPath = commonCodeUtil.getCommonCodeValueName(param);
+				detailItem.put("ICON_NM", urlHeader + iconPath);
+				
+				topList.add(detailItem);
+			} else if ("DEF".equals(groupCode)) {
+				defList.add(detailItem);
+			} else if ("MAN".equals(groupCode)) {
+				if ("N03".equals(typeCode)) {
+					String imgPath = getImgPath(urlHeader, detailVal);
+					detailItem.put("DETAIL_VAL", imgPath);
+				}
+				manList.add(detailItem);
+			}
+		}
+		
+		data.put("TOP", topList);
+		data.put("DEF", defList);
+		data.put("MAN", manList);
+		
+		result.put("data", data);
+		
+		result.put("resultCode", 200);
+		messageUtil.addResultMsg(param, result);
+
+		return gson.toJson(result);
 	}
 }

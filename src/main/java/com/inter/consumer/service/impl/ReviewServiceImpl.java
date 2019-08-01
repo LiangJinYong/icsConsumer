@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.inter.consumer.dao.DetailInfoDao;
 import com.inter.consumer.dao.ReviewDao;
 import com.inter.consumer.service.ReviewService;
+import com.inter.util.CommonCodeUtil;
 import com.inter.util.ResultMessageUtil;
 
 @Service
@@ -24,6 +25,9 @@ public class ReviewServiceImpl implements ReviewService {
 	
 	@Autowired
 	private DetailInfoDao detailInfoDao;
+	
+	@Autowired
+	private CommonCodeUtil commonCodeUtil;
 	
 	@Override
 	public String registerReview(Map<String, String> param) {
@@ -104,6 +108,20 @@ public class ReviewServiceImpl implements ReviewService {
 			if (groupUUID != null) {
 				String imgPath = detailInfoDao.getImgPathByGroupUUID(groupUUID).get(0);
 				review.put("profileUrl", param.get("urlHeader") + imgPath);
+			}
+			
+			String locationCd = (String) review.get("locationCd");
+			if (locationCd == null || "ZZ".equals(locationCd)) {
+				review.put("locationCd", "OTHER");
+			} else {
+				Map<String, String> flagMap = new HashMap<>();
+				flagMap.put("codeId", "COUNTRY_IMG_DIR");
+				flagMap.put("codeValue", "01");
+				flagMap.put("countryCode", "KR");
+				String flagPath = commonCodeUtil.getCommonCodeValueName(flagMap);
+				
+				String flagUrl = param.get("urlHeader") + flagPath + locationCd + ".png";
+				review.put("flagUrl", flagUrl);
 			}
 		}
 		

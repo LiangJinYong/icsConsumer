@@ -19,6 +19,12 @@ public interface DetailInfoDao {
 
 	Map<String, Object> getDetailContent(Map<String, String> param);
 
+	Integer getUserIdByToken(String token);
+	
+	String getReviewRegistableYn(Map<String, Object> reviewRestrictMap);
+	
+	List<Map<String, Object>> getDetailInfoByOrder(Map<String, String> param);
+	
 	// CN
 	Map<String, Object> getCurrentSeqInfoCN(Map<String, String> param);
 

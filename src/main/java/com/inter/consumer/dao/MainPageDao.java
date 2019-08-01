@@ -8,6 +8,12 @@ public interface MainPageDao {
 	Map<String, Object> getLatestNotice(Map<String, String> param);
 
 	List<Map<String, Object>> getRandomCorpImgList(Map<String, String> param);
+	
+	String getCorpNm(Map<String, Object> paramObj);
+
+	List<Map<String, Object>> getProdListByCorp(Map<String, Object> paramObj);
+
+	int getProdTotalPageNo(Map<String, Object> paramObj);
 
 	Integer getReviewTotalPageNo(Map<String, String> param);
 	
@@ -24,5 +30,4 @@ public interface MainPageDao {
 	List<Map<String, Object>> getNoticeList(Map<String, Object> paramObj);
 
 	Integer getNoticeTotalPage(Map<String, Object> paramObj);
-
 }

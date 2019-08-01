@@ -36,6 +36,11 @@ public class DetailInfoDaoImpl implements DetailInfoDao {
 	public List<Map<String, Object>> getDetailInfo(Map<String, String> param) {
 		return sqlSessionTemplate.selectList(NAMESPACE + "getDetailInfo", param);
 	}
+	
+	@Override
+	public List<Map<String, Object>> getDetailInfoByOrder(Map<String, String> param) {
+		return sqlSessionTemplate.selectList(NAMESPACE + " ", param);
+	}
 
 	@Override
 	public Map<String, Object> getReviewInfo(Map<String, String> param) {
@@ -66,6 +71,16 @@ public class DetailInfoDaoImpl implements DetailInfoDao {
 	@Override
 	public List<Map<String, Object>> getDetailinfoCN(Map<String, String> param) {
 		return sqlSessionTemplate.selectList(NAMESPACE + "getDetailinfoCN", param);
+	}
+
+	@Override
+	public Integer getUserIdByToken(String token) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getUserIdByToken", token);
+	}
+
+	@Override
+	public String getReviewRegistableYn(Map<String, Object> reviewRestrictMap) {
+		return sqlSessionTemplate.selectOne(NAMESPACE + "getReviewRegistableYn", reviewRestrictMap);
 	}
 
 }

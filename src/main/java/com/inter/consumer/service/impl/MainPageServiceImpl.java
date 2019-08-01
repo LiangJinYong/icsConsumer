@@ -88,6 +88,37 @@ public class MainPageServiceImpl implements MainPageService {
 		
 		return gson.toJson(result);
 	}
+	
+	@Override
+	public String getProdsByCorp(Map<String, String> param) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		Gson gson = new Gson();
+		
+		int currentPageNo = Integer.parseInt(param.get("currentPageNo"));
+		int offset = (currentPageNo - 1) * 20;
+		
+		Map<String, Object> paramObj = new HashMap<>();
+		paramObj.putAll(param);
+		paramObj.put("offset", offset);
+		
+		String corpNm = mainPageDao.getCorpNm(paramObj);
+		result.put("corpNm", corpNm);
+		
+		List<Map<String, Object>> prodList = mainPageDao.getProdListByCorp(paramObj);
+		result.put("data", prodList);
+		
+		for(Map<String, Object> prod : prodList) {
+			prod.put("prodImgUrl", param.get("urlHeader") + prod.get("prodImgUrl"));
+		}
+		
+		int prodTotalPageNo = mainPageDao.getProdTotalPageNo(paramObj);
+		result.put("prodTotalPageNo", prodTotalPageNo);
+		
+		result.put("resultCode", 200);
+		messageUtil.addResultMsg(param, result);
+		
+		return gson.toJson(result);
+	}
 
 	@Override
 	public String getProdImgsByReview(Map<String, String> param) {
